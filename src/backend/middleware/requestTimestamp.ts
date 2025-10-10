@@ -11,4 +11,4 @@ const requestTimestampMiddleware = (
   next();
 };
 
-export { requestTimestampMiddleware };
+export default requestTimestampMiddleware;
