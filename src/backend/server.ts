@@ -5,7 +5,6 @@ import morgan from "morgan";
 
 import rootRoutes from "./routes/root";
 import { testRoutes } from "./routes/test";
-import { requestTimestampMiddleware } from "./middleware/requestTimestamp";
 
 const app = express();
 
