@@ -1,0 +1,15 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="temp.css">
+    </head>
+    <body>
+        <h1>Available Games</h1>
+        <ul>
+            <% for (let i = 0; i < gameListing.length; i++) { %>
+                <li>
+                    <%= i %>: <%= gameListing[i] %>
+                </li>
+            <% } %>
+        </ul>
+    </body>
+</html>

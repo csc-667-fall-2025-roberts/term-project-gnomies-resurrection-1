@@ -1,0 +1,48 @@
+{
+  "name": "term-project-gnomies-resurrection-1",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/backend/server.js",
+    "dev": "ts-node src/backend/server.ts",
+    "start:dev": "NODE_ENV=production nodemon --exec ts-node src/backend/server.ts",
+    "lint": "prettier --check .",
+    "lint:fix": "prettier --write .",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "husky install"
+  },
+  "lint-staged": {
+    "*.{js,ts,json,md}": [
+      "prettier --write"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/csc-667-fall-2025-roberts/term-project-gnomies-resurrection-1.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/csc-667-fall-2025-roberts/term-project-gnomies-resurrection-1/issues"
+  },
+  "homepage": "https://github.com/csc-667-fall-2025-roberts/term-project-gnomies-resurrection-1#readme",
+  "dependencies": {
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "http-errors": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/http-errors": "^2.0.4",
+    "@types/morgan": "^1.9.10",
+    "@types/node": "^24.7.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.3",
+    "nodemon": "^3.1.10",
+    "prettier": "^3.6.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}
