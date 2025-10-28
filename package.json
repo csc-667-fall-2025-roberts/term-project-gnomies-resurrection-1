@@ -10,7 +10,7 @@
     "start": "node dist/backend/server.js",
     "dev:frontend": "esbuild src/frontend/entrypoint.ts --bundle --outfile=dist/public/js/bundle.js --watch",
     "dev:backend": "nodemon --exec ts-node src/backend/server.ts",
-    "start:dev": "concurrently --names \"backend,frontend,live\" --prefix-colors \"green,blue,red\" \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:browser\"" ,
+    "start:dev": "concurrently --names \"backend,frontend,live\" --prefix-colors \"green,blue,red\" \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:browser\"",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
     "prettier": "prettier --check .",
@@ -38,10 +38,13 @@
   },
   "homepage": "https://github.com/csc-667-fall-2025-roberts/term-project-gnomies-resurrection-1#readme",
   "dependencies": {
+    "body-parser": "^2.2.0",
+    "dotenv": "^17.2.3",
     "ejs": "^3.1.10",
     "express": "^5.1.0",
     "http-errors": "^2.0.0",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "pg-promise": "^12.2.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.3",
