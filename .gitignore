@@ -1,4 +1,5 @@
 node_modules/
 dist/
+logs/
 .env
-.vscode
+src/backend/public/js/
