@@ -28,6 +28,8 @@ if (isDevelopment) {
 const app = express();
 const httpServer = createServer(app);
 
+app.set("trust proxy", 1);
+
 app.set("io", initSockets(httpServer));
 
 const PORT = process.env.PORT || 3000;
@@ -62,6 +64,7 @@ app.use("/", routes.root);
 app.use("/auth", routes.auth);
 app.use("/lobby", requireUser, routes.lobby);
 app.use("/chat", requireUser, routes.chat);
+app.use("/games", requireUser, routes.games);
 
 app.use((_request, _response, next) => {
   next(createHttpError(404));
