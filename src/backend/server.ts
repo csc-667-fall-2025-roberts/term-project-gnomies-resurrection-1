@@ -62,6 +62,7 @@ app.use(sessionMiddleware);
 
 app.use("/", routes.root);
 app.use("/auth", routes.auth);
+app.use("/db", routes.db);                    // remove this for production
 app.use("/lobby", requireUser, routes.lobby);
 app.use("/chat", requireUser, routes.chat);
 app.use("/games", requireUser, routes.games);
