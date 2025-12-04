@@ -1,37 +1,38 @@
 import express from "express";
-import { Auth } from "../db";
-import { requireGuest } from "../middleware";
+import pool from "../db/connection";
+
 
 const router = express.Router();
 
-// example-usage.ts
-import db from './db';
+// query all tables in db and show contents
+router.get("/", async (req, res, next) => {
+  try {
+    // MUST BE tablesResult, not "tables"
+    const tablesResult = await pool.any(`
+      SELECT table_name
+      FROM information_schema.tables
+      WHERE table_schema = 'public'
+      ORDER BY table_name;
+    `);
 
-async function example() {
-  // Test connection
-  await db.testConnection();
 
-  // Get all users
-  const usersResult = await db.users.getAll();
-  console.log('Users:', usersResult.rows);
+    const data: Record<string, any[]> = {};
 
-  // Get games for a specific owner
-  const gamesResult = await db.games.getByOwner(1);
-  console.log('Games:', gamesResult.rows);
+    // tablesResults is an array returned bu pool.any()???
+    // iterate over whatever tf it is...
+    for (const row of tablesResult) {
+      const tableName = row.table_name;
 
-  // Get chat messages for a table
-  const messagesResult = await db.chatMessages.getByTableId(1);
-  console.log('Messages:', messagesResult.rows);
+      // Fetch all rows from this table
+      const rows = await pool.any(`SELECT * FROM ${tableName}`);
+      data[tableName] = rows;
+    }
 
-  // Complex query - get full table state
-  const tableState = await db.getTableWithPlayersAndCards(1);
-  console.log('Table state:', tableState);
+    res.render("db/db", { data });
 
-  // Raw query example
-  const rawResult = await db.query('SELECT COUNT(*) as user_count FROM users');
-  console.log('User count:', rawResult.rows[0].user_count);
-}
-
-example().catch(console.error);
+  } catch (err) {
+    next(err);
+  }
+});
 
 export default router;

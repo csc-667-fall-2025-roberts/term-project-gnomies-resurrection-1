@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Database Viewer</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    h1 { margin-bottom: 30px; }
+    h2 { margin-top: 40px; }
+    table { border-collapse: collapse; margin-top: 10px; width: 100%; }
+    th, td { border: 1px solid #bbb; padding: 6px; font-size: 14px; }
+    th { background: #eee; }
+    pre { white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+
+<h1>Database Contents</h1>
+
+<% for (const table in data) { %>
+  <h2><%= table %></h2>
+
+  <% const rows = data[table]; %>
+
+  <% if (rows.length === 0) { %>
+    <p>(empty)</p>
+  <% } else { %>
+
+    <table>
+      <tr>
+        <% Object.keys(rows[0]).forEach(column => { %>
+          <th><%= column %></th>
+        <% }) %>
+      </tr>
+
+      <% rows.forEach(row => { %>
+        <tr>
+          <% Object.values(row).forEach(value => { %>
+            <td>
+              <% if (typeof value === "object" && value !== null) { %>
+                <pre><%= JSON.stringify(value, null, 2) %></pre>
+              <% } else { %>
+                <%= value %>
+              <% } %>
+            </td>
+          <% }) %>
+        </tr>
+      <% }) %>
+    </table>
+
+  <% } %>
+
+<% } %>
+
+</body>
+</html>
