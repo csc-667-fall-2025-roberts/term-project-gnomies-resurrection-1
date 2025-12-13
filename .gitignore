@@ -3,3 +3,4 @@ dist/
 logs/
 .env
 src/backend/public/js/
+src/backend/public/assets/

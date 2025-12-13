@@ -1,147 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Log In</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-
-  <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      font-family: system-ui, sans-serif;
-      background: #0b5f36;
-    }
-    .bg {
-      position: fixed;
-      inset: 0;
-      background: radial-gradient(circle at center, #0f7a44 0%, #0b5f36 100%);
-      z-index: -1;
-    }
-
-    .card {
-      background: white;
-      width: 360px;
-      margin: 120px auto;
-      padding: 32px;
-      border-radius: 12px;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.25);
-      text-align: center;
-    }
-
-    .logo {
-      width: 48px;
-      margin-bottom: 12px;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: 28px;
-      font-weight: 700;
-      color: #1d2939;
-      margin-bottom: 6px;
-    }
-
-    .subtitle {
-      font-size: 14px;
-      color: #475467;
-      margin-bottom: 24px;
-    }
-
-    form {
-      text-align: left;
-    }
-
-    label {
-      display: block;
-      font-size: 14px;
-      margin-bottom: 6px;
-      color: #1f2937;
-      font-weight: 600;
-    }
-
-    input {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 16px;
-      font-size: 15px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-    }
-
-    .error {
-      background: #fee2e2;
-      border-left: 4px solid #dc2626;
-      padding: 10px;
-      margin-bottom: 16px;
-      color: #991b1b;
-      border-radius: 4px;
-      font-size: 14px;
-    }
-
-    .btn-blue {
-      width: 100%;
-      background: #2563eb;
-      color: white;
-      padding: 12px;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: 600;
-      text-decoration: none;
-      text-align: center;
-      display: block;
-      margin-top: 4px;
-      margin-bottom: 14px;
-      border: none;
-      cursor: pointer;
-    }
-
-    .btn-blue:hover {
-      background: #1d4ed8;
-    }
-
-    .link {
-      display: block;
-      text-align: center;
-      text-decoration: none;
-      padding: 10px;
-      color: #4b5563;
-      background: #e5e7eb;
-      border-radius: 6px;
-      font-weight: 600;
-    }
-
-    .link:hover {
-      background: #d1d5db;
-    }
-  </style>
+  <link rel="stylesheet" href="/css/bundle.css" />
 </head>
 
 <body>
   <div class="bg"></div>
 
-  <div class="card">
-    <img src="/favicon.svg" class="logo" />
+  <div class="card card--centered">
+    <img src="/favicon.svg" class="logo" alt="Logo" />
 
     <h1>Login</h1>
 
     <form method="post" action="/auth/login">
       <% if (locals.error) { %>
-      <div class="error"><%= locals.error %></div>
-      <% } %>
+        <div class="error-message">
+          <%= locals.error %>
+        </div>
+        <% } %>
 
-      <label for="username">Username</label>
-      <input type="text" name="username" />
+          <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" name="username" id="username" required />
+          </div>
 
-      <label for="password">Password</label>
-      <input type="password" name="password" />
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" name="password" id="password" required />
+          </div>
 
-      <button class="btn-blue" type="submit">Login</button>
+          <button class="btn-primary btn-block" type="submit">Login</button>
 
-      <a class="link" href="/auth/signup">Create an account</a>
+          <a class="btn-secondary btn-block" href="/auth/signup">Create an account</a>
     </form>
   </div>
 </body>
+
 </html>
