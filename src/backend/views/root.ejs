@@ -13,14 +13,18 @@
   <div class="bg"></div>
 
   <div class="card card--centered">
-    <img src="/favicon.svg" alt="Logo" class="logo">
-
-    <h1>Welcome to Poker</h1>
-    <!--<p class="subtitle">Texas Hold'em Multiplayer</p>-->
+    <h1>
+      <span class="poker-logo">🃏</span>
+      Poker
+    </h1>
+    <p class="subtitle">Texas Hold'em Multiplayer</p>
 
     <a class="btn-primary btn-block" href="/auth/login">Login</a>
     <a class="btn-success btn-block" href="/auth/signup">Sign Up</a>
-    <a class="btn-secondary btn-block" href="/db">Test Database Contents</a>
+
+    <% if (process.env.NODE_ENV==='development' ) { %>
+      <a class="btn-secondary btn-block" href="/db">🛠️ DEV: Database Contents</a>
+      <% } %>
   </div>
 </body>
 
