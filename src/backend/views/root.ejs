@@ -4,27 +4,29 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Poker Game</title>
+  <title>Poker - Multiplayer Texas Hold'em</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="stylesheet" href="/css/bundle.css" />
 </head>
 
 <body>
-  <div class="bg"></div>
+  <div class="landing-container">
+    <div class="landing-hero">
+      <h1>
+        <span class="poker-logo">🃏</span>
+        Poker
+      </h1>
+      <p class="tagline">Texas Hold'em Multiplayer</p>
 
-  <div class="card card--centered">
-    <h1>
-      <span class="poker-logo">🃏</span>
-      Poker
-    </h1>
-    <p class="subtitle">Texas Hold'em Multiplayer</p>
+      <div class="landing-actions">
+        <a href="/auth/login" class="btn-primary btn-large">Log In</a>
+        <a href="/auth/signup" class="btn-secondary btn-large">Sign Up</a>
+      </div>
 
-    <a class="btn-primary btn-block" href="/auth/login">Login</a>
-    <a class="btn-success btn-block" href="/auth/signup">Sign Up</a>
-
-    <% if (process.env.NODE_ENV==='development' ) { %>
-      <a class="btn-secondary btn-block" href="/db">🛠️ DEV: Database Contents</a>
-      <% } %>
+      <% if (process.env.NODE_ENV==='development' ) { %>
+        <a class="btn-dev" href="/db">🛠️ DEV: Database Contents</a>
+        <% } %>
+    </div>
   </div>
 </body>
 

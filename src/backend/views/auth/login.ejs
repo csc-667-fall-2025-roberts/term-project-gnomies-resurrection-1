@@ -4,40 +4,43 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Log In</title>
+  <title>Log In - Poker</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="stylesheet" href="/css/bundle.css" />
 </head>
 
 <body>
-  <div class="bg"></div>
+  <div class="auth-container">
+    <div class="auth-card">
+      <h1>
+        <span class="poker-logo">🃏</span>
+        Log In
+      </h1>
 
-  <div class="card card--centered">
-    <img src="/favicon.svg" class="logo" alt="Logo" />
-
-    <h1>Login</h1>
-
-    <form method="post" action="/auth/login">
-      <% if (locals.error) { %>
+      <% if(locals.error) { %>
         <div class="error-message">
           <%= locals.error %>
         </div>
         <% } %>
 
-          <div class="form-group">
-            <label for="username">Username</label>
-            <input type="text" name="username" id="username" required />
-          </div>
+          <form method="post" action="/auth/login">
+            <div class="form-group">
+              <label for="username">Username</label>
+              <input type="text" name="username" id="username" required />
+            </div>
 
-          <div class="form-group">
-            <label for="password">Password</label>
-            <input type="password" name="password" id="password" required />
-          </div>
+            <div class="form-group">
+              <label for="password">Password</label>
+              <input type="password" name="password" id="password" required />
+            </div>
 
-          <button class="btn-primary btn-block" type="submit">Login</button>
+            <button type="submit" class="btn-primary">Log In</button>
 
-          <a class="btn-secondary btn-block" href="/auth/signup">Create an account</a>
-    </form>
+            <div class="form-footer">
+              Don't have an account? <a href="/auth/signup">Create one</a>
+            </div>
+          </form>
+    </div>
   </div>
 </body>
 

@@ -1,18 +1,25 @@
 /* ==================== CSS VARIABLES ==================== */
 :root {
-  /* Color Palette */
-  --color-primary: #2563eb;
-  --color-secondary: #4b5563;
-  --color-success: #16a34a;
-  --color-danger: #dc2626;
-  --color-warning: #d97706;
+  /* Color Palette - Poker Theme */
+  --color-primary: #d90429;
+  /* Casino Red */
+  --color-primary-hover: #ef233c;
+  --color-secondary: #2b2d42;
+  /* Chip Black */
+  --color-success: #10b981;
+  --color-danger: #ef233c;
+  --color-warning: #f59e0b;
+  /* Gold/Chips */
 
   /* Neutral Colors */
-  --color-background: #0b5f36;
-  --color-background-alt: #f6f7f9;
-  --color-surface: #ffffff;
-  --color-surface-muted: #f9fafb;
-  --color-border: #e5e7eb;
+  --color-background: #1b4332;
+  /* Deep Felt Green */
+  --color-background-alt: #2d6a4f;
+  /* Lighter Felt */
+  --color-surface: #f8f9fa;
+  /* Off-white card stock */
+  --color-surface-muted: #e9ecef;
+  --color-border: #dee2e6;
 
   /* Text Colors */
   --color-text-primary: #1d2939;
