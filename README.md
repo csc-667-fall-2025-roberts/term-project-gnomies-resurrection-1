@@ -1,9 +1,9 @@
 # TODO
 
 ## General
-- [] Change styling in game page to match overall style
+- [] Change styling in game page to match overall style (Sal)
 - [] Fix error where you are not routed to game page after creating game 
-- [] Create unique game rooms for each game 
+- [] Create unique game rooms for each game (Sal)
 - [] Make an entry in the "table" table for every entry in "game" table
 - [] Add functionality for checking available games in lobby (John)
 - [] Add cards to "card" table in DB
