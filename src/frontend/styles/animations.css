@@ -1,25 +1,639 @@
 /* ==================== ANIMATION CATEGORIES ==================== */
+/* A. Card Animations | B. Chip Animations | C. Betting Actions */
+/* D. Turn Indicators | E. Winner/Showdown | F. Utility Animations */
 
-/* A. CARD ANIMATIONS */
+/* ==================== A. CARD ANIMATIONS ==================== */
+
+/* Card entering the board (dealing) */
+@keyframes cardDeal {
+  0% {
+    opacity: 0;
+    transform: translateY(-100px) rotateY(180deg) scale(0.5);
+  }
+
+  60% {
+    opacity: 1;
+    transform: translateY(10px) rotateY(0deg) scale(1.05);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) rotateY(0deg) scale(1);
+  }
+}
+
+/* Card flip reveal (community cards) */
+@keyframes cardFlip {
+  0% {
+    transform: rotateY(180deg);
+  }
+
+  100% {
+    transform: rotateY(0deg);
+  }
+}
+
+/* Card entering player hand */
+@keyframes cardToHand {
+  0% {
+    opacity: 0;
+    transform: translateX(-50px) translateY(-30px) rotate(-15deg);
+  }
+
+  70% {
+    opacity: 1;
+    transform: translateX(5px) translateY(0) rotate(2deg);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateX(0) translateY(0) rotate(0deg);
+  }
+}
+
+/* Card hover lift */
+@keyframes cardHover {
+  0% {
+    transform: translateY(0);
+  }
+
+  100% {
+    transform: translateY(-12px);
+  }
+}
+
+/* Card selection pulse */
+@keyframes cardSelect {
+  0% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
+  }
+
+  70% {
+    box-shadow: 0 0 0 10px rgba(245, 158, 11, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+  }
+}
+
+/* Folded card fade out */
+@keyframes cardFold {
+  0% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(0.8) rotate(-10deg) translateY(20px);
+  }
+}
+
+/* Simple card enter for general use */
 @keyframes playingCardEnter {
   from {
     opacity: 0;
     transform: translateY(8px) scale(0.98);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
 }
 
-/* B. HOVER/INTERACTION ANIMATIONS */
+/* ==================== B. CHIP ANIMATIONS ==================== */
+
+/* Chips moving to pot */
+@keyframes chipToPot {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+
+  50% {
+    opacity: 0.8;
+    transform: scale(0.9) translateY(-40px);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(0.7) translateY(-80px);
+  }
+}
+
+/* Chips from pot to winner */
+@keyframes chipToWinner {
+  0% {
+    opacity: 0;
+    transform: scale(0.5) translateY(-50px);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.1) translateY(-10px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Chip stack bounce (when receiving chips) */
+@keyframes chipBounce {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  25% {
+    transform: translateY(-8px);
+  }
+
+  50% {
+    transform: translateY(-4px);
+  }
+
+  75% {
+    transform: translateY(-2px);
+  }
+}
+
+/* Chip shimmer effect */
+@keyframes chipShimmer {
+  0% {
+    background-position: -200% center;
+  }
+
+  100% {
+    background-position: 200% center;
+  }
+}
+
+/* ==================== C. BETTING ACTION ANIMATIONS ==================== */
+
+/* Button press feedback */
+@keyframes buttonPress {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(0.95);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Action confirmed (success) */
+@keyframes actionConfirmed {
+  0% {
+    background-color: var(--color-success, #22c55e);
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
+
+  100% {
+    background-color: inherit;
+    transform: scale(1);
+  }
+}
+
+/* Action failed (error) */
+@keyframes actionFailed {
+
+  0%,
+  100% {
+    transform: translateX(0);
+    background-color: inherit;
+  }
+
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-4px);
+    background-color: var(--color-danger, #ef4444);
+  }
+
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(4px);
+    background-color: var(--color-danger, #ef4444);
+  }
+}
+
+/* Raise slider pulse */
+@keyframes raiseInputPulse {
+
+  0%,
+  100% {
+    border-color: var(--color-border, #e5e7eb);
+  }
+
+  50% {
+    border-color: var(--color-primary, #3b82f6);
+  }
+}
+
+/* Betting amount update */
+@keyframes amountUpdate {
+  0% {
+    transform: scale(1);
+  }
+
+  25% {
+    transform: scale(1.15);
+    color: var(--color-success, #22c55e);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ==================== D. TURN INDICATOR ANIMATIONS ==================== */
+
+/* Active turn glow */
+@keyframes activeTurnGlow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.5);
+  }
+}
+
+/* Turn timer countdown */
+@keyframes turnTimer {
+  0% {
+    width: 100%;
+    background-color: var(--color-success, #22c55e);
+  }
+
+  70% {
+    background-color: var(--color-warning, #f59e0b);
+  }
+
+  100% {
+    width: 0%;
+    background-color: var(--color-danger, #ef4444);
+  }
+}
+
+/* Dealer button rotate */
+@keyframes dealerRotate {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Dealer button pulse */
+@keyframes dealerPulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* ==================== E. WINNER/SHOWDOWN ANIMATIONS ==================== */
+
+/* Winner celebration */
+@keyframes winnerCelebrate {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
+  }
+
+  25% {
+    transform: scale(1.05);
+  }
+
+  50% {
+    transform: scale(1);
+    box-shadow: 0 0 0 15px rgba(245, 158, 11, 0);
+  }
+
+  75% {
+    transform: scale(1.03);
+  }
+
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+  }
+}
+
+/* Hand ranking reveal */
+@keyframes handReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.9);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Pot update flash */
+@keyframes potUpdate {
+  0% {
+    transform: scale(1);
+  }
+
+  25% {
+    transform: scale(1.2);
+    color: var(--color-success, #22c55e);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Confetti particle (for big wins) */
+@keyframes confetti {
+  0% {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(100vh) rotate(720deg);
+  }
+}
+
+/* ==================== F. UTILITY ANIMATIONS ==================== */
+
+/* General fade in */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* Fade in with upward motion */
 @keyframes fadeInUp {
   from {
     opacity: 0;
     transform: translateY(6px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Fade out */
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+/* Slide in from left */
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Slide in from right */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Pulse (attention) */
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* Shake (error/warning) */
+@keyframes shake {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-4px);
+  }
+
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+/* Bounce */
+@keyframes bounce {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Spin */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==================== ANIMATION CLASSES ==================== */
+/* Apply these classes to elements to trigger animations */
+
+/* Card animations */
+.card-dealing {
+  animation: cardDeal 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.card-flipping {
+  animation: cardFlip 0.4s ease-in-out forwards;
+}
+
+.card-to-hand {
+  animation: cardToHand 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.card-folding {
+  animation: cardFold 0.4s ease-out forwards;
+}
+
+/* Chip animations */
+.chip-to-pot {
+  animation: chipToPot 0.5s ease-out forwards;
+}
+
+.chip-to-winner {
+  animation: chipToWinner 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.chip-bouncing {
+  animation: chipBounce 0.4s ease-out;
+}
+
+/* Action button animations */
+.action-btn:active {
+  animation: buttonPress 0.15s ease-out;
+}
+
+.action-confirmed {
+  animation: actionConfirmed 0.5s ease-out;
+}
+
+.action-failed {
+  animation: actionFailed 0.5s ease-out;
+}
+
+/* Turn indicator */
+.active-turn {
+  animation: activeTurnGlow 2s ease-in-out infinite;
+}
+
+.turn-timer-bar {
+  animation: turnTimer 30s linear forwards;
+}
+
+/* Dealer button */
+.dealer-button {
+  animation: dealerPulse 2s ease-in-out infinite;
+}
+
+.dealer-moving {
+  animation: dealerRotate 0.5s ease-out;
+}
+
+/* Winner */
+.winner-highlight {
+  animation: winnerCelebrate 1s ease-out;
+}
+
+.hand-ranking {
+  animation: handReveal 0.4s ease-out forwards;
+}
+
+.pot-updating {
+  animation: potUpdate 0.4s ease-out;
+}
+
+/* Utility classes */
+.fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.fade-out {
+  animation: fadeOut 0.3s ease-out forwards;
+}
+
+.slide-in-left {
+  animation: slideInLeft 0.3s ease-out forwards;
+}
+
+.slide-in-right {
+  animation: slideInRight 0.3s ease-out forwards;
+}
+
+.pulsing {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.shaking {
+  animation: shake 0.5s ease-out;
+}
+
+.bouncing {
+  animation: bounce 0.5s ease-out;
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+/* Error state for input */
+.input-error {
+  animation: shake 0.4s ease-out;
+  border-color: var(--color-danger, #ef4444) !important;
+}
+
+.raise-error {
+  color: var(--color-danger, #ef4444);
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  animation: fadeIn 0.2s ease-out;
 }

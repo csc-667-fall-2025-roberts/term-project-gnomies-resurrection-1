@@ -11,10 +11,13 @@
  */
 
 import type { BettingAction } from "./types";
+import { validateRaise, formatChips } from "./betting";
 
 // Track current betting state
 let currentAction: BettingAction | null = null;
 let raiseAmount: number = 0;
+let currentMinRaise: number = 0;
+let currentMaxRaise: number = 0;
 
 // Cache DOM elements
 const foldBtn = document.querySelector<HTMLButtonElement>("#fold-btn");
@@ -114,9 +117,10 @@ function handleRaise(): void {
 
     const amount = parseInt(raiseInput.value, 10);
 
-    // Validate amount
-    if (isNaN(amount) || amount <= 0) {
-        showRaiseError("Please enter a valid amount");
+    // Use betting module validation
+    const validation = validateRaise(amount, currentMinRaise, currentMaxRaise);
+    if (!validation.valid) {
+        showRaiseError(validation.message || "Invalid raise amount");
         return;
     }
 
@@ -238,6 +242,10 @@ export function updateActionButtons(
     minRaise: number,
     maxRaise: number
 ): void {
+    // Store min/max for validation in handleRaise
+    currentMinRaise = minRaise;
+    currentMaxRaise = maxRaise;
+
     // Reset current action when turn changes
     if (isMyTurn) {
         currentAction = null;
@@ -274,7 +282,7 @@ export function updateActionButtons(
         callBtn.disabled = !isMyTurn || !canCall;
         if (canCall && isMyTurn) {
             callBtn.classList.add("enabled");
-            callBtn.textContent = `Call $${callAmount}`;
+            callBtn.textContent = `Call $${formatChips(callAmount)}`;
             callBtn.style.display = "block";
         } else {
             callBtn.classList.remove("enabled");
@@ -290,7 +298,7 @@ export function updateActionButtons(
         raiseBtn.disabled = !isMyTurn;
         if (isMyTurn) {
             raiseBtn.classList.add("enabled");
-            raiseBtn.textContent = `Raise (min $${minRaise})`;
+            raiseBtn.textContent = `Raise (min $${formatChips(minRaise)})`;
         } else {
             raiseBtn.classList.remove("enabled");
         }
@@ -301,7 +309,7 @@ export function updateActionButtons(
         raiseInput.disabled = !isMyTurn;
         raiseInput.min = String(minRaise);
         raiseInput.max = String(maxRaise);
-        raiseInput.placeholder = `$${minRaise} - $${maxRaise}`;
+        raiseInput.placeholder = `$${formatChips(minRaise)} - $${formatChips(maxRaise)}`;
 
         if (isMyTurn) {
             raiseInput.value = String(minRaise);
@@ -313,7 +321,7 @@ export function updateActionButtons(
         allInBtn.disabled = !isMyTurn;
         if (isMyTurn) {
             allInBtn.classList.add("enabled");
-            allInBtn.textContent = `All-In ($${maxRaise})`;
+            allInBtn.textContent = `All-In ($${formatChips(maxRaise)})`;
         } else {
             allInBtn.classList.remove("enabled");
         }
