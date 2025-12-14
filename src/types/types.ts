@@ -33,5 +33,6 @@ export type Game = {
   created_by: number;
   state: GameState;
   max_players: number;
+  player_count?: number; // Current number of players in the game
   created_at: Date;
 };

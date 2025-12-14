@@ -30,78 +30,36 @@ a:hover {
   text-decoration: underline;
 }
 
+
 /* ==================== COMMON COMPONENTS ==================== */
 
-.bg {
-  position: fixed;
-  inset: 0;
-  background: radial-gradient(circle at center, #0f7a44 0%, var(--color-background) 100%);
-  z-index: -1;
-}
-
+/* Header - Floating Card Style */
 .header {
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(255, 255, 255, 0.1);
-  padding: 1.5rem 2rem;
-  border-radius: 12px;
-  backdrop-filter: blur(10px);
+  /* Background provided by .card class */
 }
 
+/* Header Text */
 .header h1 {
-  color: white;
+  color: var(--color-text-primary);
+  /* Changed to text-primary to contrast with white card */
   font-size: 2rem;
   font-weight: var(--font-weight-bold);
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.header__identity {
   display: flex;
   align-items: center;
-  gap: 2rem;
+  gap: 0.75rem;
+  margin: 0;
+  /* Reset margin */
 }
 
-.user-info {
-  color: white;
-  font-size: 1.1rem;
-  margin-right: 2rem;
-}
-
-.logout-btn {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: 2px solid white;
-  padding: 0.7rem 2rem;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: var(--font-weight-medium);
-  text-decoration: none;
-  transition: var(--transition);
-  display: inline-block;
-}
-
-.logout-btn:hover {
-  background: white;
-  color: var(--color-background);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-.container {
-  max-width: 1400px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 2rem;
-}
-
-.main-content {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
+/* Auth Pages Header override */
+.auth-card h1 {
+  /* ... specific styles for auth header ... */
+  margin-bottom: 2rem;
 }
 
 .card {
@@ -121,17 +79,7 @@ a:hover {
   gap: 0.5rem;
 }
 
-.create-game-form {
-  display: grid;
-  gap: 1.5rem;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
+/* Forms */
 .form-group {
   display: flex;
   flex-direction: column;
@@ -182,223 +130,165 @@ a:hover {
 
 /* ==================== PAGE TEMPLATES ==================== */
 
-.games-section h2::before {
-  content: "🃏";
-}
-
-#game-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
+/* Game Item - Poker Ticket Style */
 .game-item {
-  background: var(--color-surface-muted);
-  border: 2px solid var(--color-border);
-  border-radius: 12px;
-  padding: 1.5rem;
+  padding: 0.5rem;
+  /* var(--spacing-sm) */
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   transition: var(--transition);
-  animation: fadeInUp 0.2s ease;
 }
 
 .game-item:hover {
   border-color: var(--color-primary);
-  transform: translateX(5px);
-  box-shadow: var(--card-shadow-hover);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .game-info {
-  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  /* var(--spacing-xs) */
 }
 
 .game-name {
-  font-size: 1.3rem;
-  font-weight: var(--font-weight-bold);
+  font-size: 0.9rem;
+  font-weight: 600;
   color: var(--color-text-primary);
-  margin-bottom: 0.5rem;
   display: block;
 }
 
-.listing-meta {
+.game-meta {
   display: flex;
-  gap: 1.5rem;
+  gap: 0.5rem;
+  /* var(--spacing-sm) */
+  font-size: 0.75rem;
   color: var(--color-text-secondary);
-  font-size: 0.95rem;
+  align-items: center;
 }
 
+.max-players {
+  color: var(--color-text-muted);
+}
+
+/* State Badges */
 .game-state {
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.85rem;
-  font-weight: var(--font-weight-medium);
+  padding: 1px 0.4rem;
+  border-radius: 4px;
+  /* Small radius */
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
 }
 
-.game-state.lobby {
+.game-state[data-state="lobby"] {
   background: var(--state-lobby-bg);
   color: var(--state-lobby-text);
 }
 
-.game-state.active {
+.game-state[data-state="active"] {
   background: var(--state-active-bg);
   color: var(--state-active-text);
 }
 
-.game-state.completed {
+.game-state[data-state="completed"] {
   background: var(--state-completed-bg);
   color: var(--state-completed-text);
 }
 
-.game-actions {
+
+/* Chat Component - Unified */
+#chat-area {
   display: flex;
-  gap: 0.75rem;
+  flex-direction: column;
 }
 
-.btn-join {
-  background: var(--color-success);
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-weight: var(--font-weight-medium);
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.btn-join:hover:not(:disabled) {
-  background: #15803d;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
-}
-
-.btn-join:disabled {
-  background: #9ca3af;
-  cursor: not-allowed;
-}
-
-.btn-spectate {
-  background: var(--color-secondary);
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-weight: var(--font-weight-medium);
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.btn-spectate:hover {
-  background: #374151;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(75, 85, 99, 0.3);
-}
-
-.no-games {
-  text-align: center;
-  color: #9ca3af;
-  padding: 3rem;
-  font-size: 1.1rem;
-}
-
-.chat-section {
-  position: sticky;
-  top: 2rem;
-  height: fit-content;
-}
-
-.chat-section h2::before {
-  content: "💬";
-}
-
-#message-listing {
+#message-listing,
+.message-listing {
   background: var(--color-surface-muted);
   border-radius: 8px;
   padding: 1rem;
   height: 400px;
   overflow-y: auto;
   margin-bottom: 1rem;
-  border: 2px solid var(--color-border);
+  border: 1px solid var(--color-border);
 }
 
-#message-listing::-webkit-scrollbar {
-  width: 8px;
+/* Scrollbar styling */
+#message-listing::-webkit-scrollbar,
+.message-listing::-webkit-scrollbar {
+  width: 6px;
 }
 
-#message-listing::-webkit-scrollbar-track {
-  background: #f3f4f6;
+#message-listing::-webkit-scrollbar-track,
+.message-listing::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#message-listing::-webkit-scrollbar-thumb,
+.message-listing::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
   border-radius: 4px;
-}
-
-#message-listing::-webkit-scrollbar-thumb {
-  background: #9ca3af;
-  border-radius: 4px;
-}
-
-#message-listing::-webkit-scrollbar-thumb:hover {
-  background: #6b7280;
 }
 
 .chat-message {
   background: white;
-  padding: 0.75rem;
+  padding: 0.6rem 0.8rem;
   border-radius: 8px;
-  margin-bottom: 0.75rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 0.5rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  font-size: 0.95rem;
 }
 
 .message-header {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 0.5rem;
-  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.8rem;
   color: var(--color-text-muted);
 }
 
 .message-username {
-  font-weight: var(--font-weight-medium);
+  font-weight: 600;
   color: var(--color-primary);
 }
 
-.message-text {
-  color: var(--color-text-primary);
-  line-height: 1.4;
-}
-
-#message-submit {
+#message-submit,
+.message-submit {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
-#message-submit input {
+#message-submit input,
+.message-submit input {
   flex: 1;
   padding: 0.75rem;
-  border: 2px solid var(--color-border);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: 0.95rem;
 }
 
-#message-submit input:focus {
+#message-submit input:focus,
+.message-submit input:focus {
   outline: none;
   border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(217, 4, 41, 0.1);
 }
 
-#message-submit button {
+#message-submit button,
+.message-submit button {
+  /* Inherits from btn-primary usually, but explicit here just in case */
   background: var(--color-primary);
   color: white;
   border: none;
-  padding: 0.75rem 1.5rem;
+  padding: 0 1.25rem;
   border-radius: 8px;
-  font-weight: var(--font-weight-medium);
+  font-weight: 600;
   cursor: pointer;
-  transition: var(--transition);
-}
-
-#message-submit button:hover {
-  background: #1d4ed8;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 }
 
 /* ==================== RESPONSIVE ==================== */
@@ -678,4 +568,243 @@ a:hover {
   font-weight: var(--font-weight-medium);
   margin-bottom: 0.5rem;
   text-align: left;
+}
+
+/* ==================== LOBBY PAGE ==================== */
+
+/* Header components unique to Lobby */
+.header-user {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.header-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  background: white;
+}
+
+.header-username {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  font-size: 0.9rem;
+}
+
+.btn-link {
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-weight: var(--font-weight-medium);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: var(--transition);
+  font-size: 0.9rem;
+}
+
+.btn-link:hover {
+  background: var(--color-surface-muted);
+  color: var(--color-primary);
+}
+
+/* Lobby Container - Flex 2:1 ratio */
+.lobby-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  gap: 1rem;
+  align-items: stretch;
+}
+
+/* Main Section (Games) - 2/3 width */
+.lobby-main {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Create Game Form - COMPACT HORIZONTAL LAYOUT */
+.lobby-main>.card:first-child {
+  padding: 1rem 1.5rem;
+  /* Compact padding */
+}
+
+.lobby-main>.card:first-child h2 {
+  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
+}
+
+.lobby-main>.card:first-child form {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+  /* Align inputs and button */
+}
+
+.lobby-main>.card:first-child .form-group {
+  flex: 1;
+  margin-bottom: 0;
+  /* Remove default margin */
+}
+
+.lobby-main>.card:first-child .form-group:last-of-type {
+  flex: 0 0 100px;
+  /* Fixed width for max players */
+}
+
+.lobby-main>.card:first-child .form-group label {
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.lobby-main>.card:first-child .form-group input {
+  padding: 0.5rem;
+  /* Smaller inputs */
+}
+
+.lobby-main>.card:first-child button {
+  flex: 0 0 auto;
+  padding: 0.6rem 1.2rem;
+  /* Compact button */
+  white-space: nowrap;
+  margin-bottom: 2px;
+  /* Visual alignment with inputs */
+}
+
+/* Game Columns - Side by Side */
+.lobby-game-columns {
+  display: flex;
+  gap: 1rem;
+  flex: 1;
+  /* Fill remaining vertical space? No, horizontal. */
+}
+
+.lobby-game-columns>.card {
+  flex: 1;
+  /* 50/50 Split */
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  /* Compact padding */
+}
+
+.lobby-game-columns h2 {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+/* Chat Section - 1/3 width */
+.lobby-chat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.lobby-chat .card {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 1rem;
+  max-height: calc(100vh - 100px);
+  /* Prevent falling off screen */
+  position: sticky;
+  top: 1rem;
+}
+
+.lobby-chat h2 {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+#chat-area {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 400px;
+}
+
+/* Chat Messages */
+#message-listing {
+  flex: 1;
+  margin-bottom: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 6px;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+}
+
+.chat-message {
+  padding: 0.5rem;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.message-header {
+  font-size: 0.75rem;
+  margin-bottom: 0.2rem;
+}
+
+/* Chat Submit - Compact */
+#message-submit {
+  gap: 0.5rem;
+}
+
+#message-submit input {
+  padding: 0.5rem;
+  font-size: 0.9rem;
+}
+
+#message-submit button {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+/* Game Lists */
+#my-game-list,
+#available-game-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Ensure Game Items are compact */
+.game-item {
+  padding: 0.75rem;
+  /* Reduce form 1.5rem */
+}
+
+.game-name {
+  font-size: 1rem;
+  /* Reduce from 1.2rem */
+  margin-bottom: 0.25rem;
+}
+
+.game-meta {
+  font-size: 0.8rem;
+}
+
+.game-actions button {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+}
+
+/* Emtpy State */
+.empty-state {
+  padding: 1rem;
+  font-size: 0.9rem;
+}
+
+/* ==================== RESPONSIVE ==================== */
+
+@media (max-width: 1024px) {
+  .lobby-container {
+    flex-direction: column;
+  }
+
+  .lobby-chat .card {
+    max-height: 500px;
+    position: static;
+  }
 }
