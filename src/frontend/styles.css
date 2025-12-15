@@ -125,6 +125,17 @@ a:hover {
   gap: 1.5rem;
 }
 
+.game-lists-container {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.game-lists-container>.card {
+  flex: 1;
+  min-width: 0;
+  /* Prevents flex items from overflowing */
+}
+
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -427,6 +438,12 @@ a:hover {
   .form-row {
     grid-template-columns: 1fr;
   }
+
+  .game-lists-container {
+    flex-direction: column;
+  }
+
+
 
   .game-item {
     flex-direction: column;
