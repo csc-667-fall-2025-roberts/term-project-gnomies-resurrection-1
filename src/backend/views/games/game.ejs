@@ -83,15 +83,17 @@
     </div>
 
     <script>
-      // populate the player count dropdown client-side (2..8)
-      (function populatePlayerSelect(){
+      // populate the player count dropdown client-side
+      (function populatePlayerSelect() {
         const sel = document.getElementById('playerCountSelect');
-        const defaultCount = 7; // change if you want a different initial selection
-        for(let i = 2; i <= 8; i++){
+        const maxPlayers = parseInt('<%= maxPlayers %>', 10); // Ensure maxPlayers is parsed as an integer
+        const defaultCount = Math.min(maxPlayers, 7); // Default to 7 or maxPlayers, whichever is smaller
+
+        for (let i = 2; i <= maxPlayers; i++) {
           const opt = document.createElement('option');
           opt.value = i;
           opt.textContent = i;
-          if(i === defaultCount) opt.selected = true;
+          if (i === defaultCount) opt.selected = true;
           sel.appendChild(opt);
         }
       })();

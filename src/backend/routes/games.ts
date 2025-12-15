@@ -30,19 +30,11 @@ router.get("/", async (request, response) => {
 router.post("/", async (request, response) => {
   try {
     const { id } = request.session.user!;
-    const max_players = parseInt(request.body.max_players) || 4;
-    // Generate random name if not provided (e.g., "brave-green-dolphin")
+    const max_players = parseInt(request.body.max_players) || 4; // Default to 4 if not provided
     const name = request.body.name?.trim() || generateGameName();
 
-    logger.info(`Create game request ${name}, ${max_players} by ${id}`);
     const game = await Games.create(id, name, max_players);
-
-    // Add creator as first player
     await Games.join(game.id, id);
-    logger.info(`Game created: ${game.id}`);
-
-    const io = request.app.get("io") as Server;
-    io.emit(GAME_CREATE, { ...game });
 
     response.redirect(`/games/${game.id}`);
   } catch (error: any) {
@@ -60,6 +52,7 @@ router.get("/:id", async (request, response) => {
   response.render("games/game", {
     ...game,
     currentUserId,
+    maxPlayers: game.max_players,
   });
 });
 
