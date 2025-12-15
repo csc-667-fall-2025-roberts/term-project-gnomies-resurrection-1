@@ -1,31 +1,126 @@
+/**
+ * Load Games Module
+ * 
+ * Purpose: Fetch and render game listings for the lobby
+ * Handles two separate lists: "Your Games" and "Available Games"
+ */
+
 import { Game } from "../../types/types";
 
-const gameListing = document.querySelector<HTMLDivElement>("#game-list")!;
-const gameItemTemplate = document.querySelector<HTMLTemplateElement>("#game-listing-template")!;
+// Cache DOM elements
+const myGameListing = document.querySelector<HTMLDivElement>("#my-game-list");
+const availableGameListing = document.querySelector<HTMLDivElement>("#available-game-list");
+const gameItemTemplate = document.querySelector<HTMLTemplateElement>("#game-listing-template");
 
-export const loadGames = () => {
+/**
+ * Fetch games from server
+ */
+export const loadGames = (): void => {
   fetch("/games", { credentials: "include" });
 };
 
-const createGameElement = (game: Game) => {
-  const gameItem = gameItemTemplate.content.cloneNode(true) as HTMLDivElement;
+/**
+ * Create a game list item element
+ * @param game - Game data
+ * @param isMyGame - Whether this is the current user's game
+ * @returns Document fragment with game item
+ */
+const createGameElement = (game: Game, isMyGame: boolean = false): DocumentFragment => {
+  if (gameItemTemplate === null) {
+    throw new Error("Game item template not found");
+  }
 
-  gameItem.querySelector(".game-id")!.textContent = `${game.id}`;
-  gameItem.querySelector(".game-name")!.textContent = game.name ?? `Game ${game.id}`;
-  gameItem.querySelector(".game-created-by")!.textContent = `${game.created_by}`;
-  gameItem.querySelector(".game-state")!.textContent = game.state;
-  gameItem.querySelector(".max-players")!.textContent = `${game.max_players}`;
-  gameItem.querySelector(".created-at")!.textContent = new Date(
-    game.created_at,
-  ).toLocaleDateString();
+  const gameItem = gameItemTemplate.content.cloneNode(true) as DocumentFragment;
+
+  // Set game name
+  const nameEl = gameItem.querySelector(".game-name");
+  if (nameEl !== null) {
+    nameEl.textContent = game.name ?? `Game ${game.id}`;
+  }
+
+  // Set game state with data attribute for color coding
+  const stateEl = gameItem.querySelector(".game-state") as HTMLElement | null;
+  if (stateEl !== null) {
+    stateEl.textContent = game.state;
+    stateEl.dataset.state = game.state;
+  }
+
+  // Set player count in format "3/8 players"
+  const playerCount = (game as any).player_count ?? 0;
+  const playersEl = gameItem.querySelector(".max-players");
+  if (playersEl !== null) {
+    playersEl.textContent = `${playerCount}/${game.max_players} players`;
+  }
+
+  // Configure form method/action and button text based on game ownership
+  const form = gameItem.querySelector("form");
+  const button = gameItem.querySelector("button");
+
+  if (form !== null && button !== null) {
+    if (isMyGame) {
+      form.method = "get";
+      form.action = `/games/${game.id}`;
+      button.textContent = "Rejoin";
+    } else {
+      form.method = "post";
+      form.action = `/games/${game.id}/join`;
+      button.textContent = "Join";
+    }
+  }
 
   return gameItem;
 };
 
-export const renderGames = (games: Game[]) => {
-  gameListing.replaceChildren(...games.map(createGameElement));
+/**
+ * Render games to both lists
+ * @param data - Object containing myGames and availableGames arrays
+ */
+export const renderGames = (data: { myGames: Game[]; availableGames: Game[] } | Game[]): void => {
+  // Handle both new format and legacy format
+  let myGames: Game[] = [];
+  let availableGames: Game[] = [];
+
+  if (Array.isArray(data)) {
+    // Legacy format: single array - treat all as available
+    availableGames = data;
+  } else {
+    // New format: separate arrays
+    myGames = data.myGames ?? [];
+    availableGames = data.availableGames ?? [];
+  }
+
+  // Render user's games
+  if (myGameListing !== null) {
+    if (myGames.length === 0) {
+      myGameListing.innerHTML = '<p class="empty-state">No games yet. Create one to get started!</p>';
+    } else {
+      myGameListing.replaceChildren(...myGames.map((g) => createGameElement(g, true)));
+    }
+  }
+
+  // Render available games
+  if (availableGameListing !== null) {
+    if (availableGames.length === 0) {
+      availableGameListing.innerHTML = '<p class="empty-state">No available games to join.</p>';
+    } else {
+      availableGameListing.replaceChildren(...availableGames.map((g) => createGameElement(g, false)));
+    }
+  }
 };
 
-export const appendGame = (game: Game) => {
-  gameListing.appendChild(createGameElement(game));
+/**
+ * Append a newly created game to the available list
+ * @param game - New game data
+ */
+export const appendGame = (game: Game): void => {
+  if (availableGameListing !== null && gameItemTemplate !== null) {
+    availableGameListing.appendChild(createGameElement(game, false));
+
+    // Remove empty state message if it exists
+    const emptyState = availableGameListing.querySelector(".empty-state");
+    if (emptyState !== null) {
+      emptyState.remove();
+    }
+  }
 };
+

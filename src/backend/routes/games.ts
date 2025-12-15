@@ -1,7 +1,7 @@
 import express from "express";
 import { Server } from "socket.io";
 
-import { GAME_CREATE, GAME_LISTING } from "../../shared/keys";
+import { GAME_CREATE, GAME_LISTING, GLOBAL_ROOM } from "../../shared/keys";
 import { Games } from "../db";
 import { generateGameName } from "../lib/game-names";
 import logger from "../lib/logger";
@@ -35,6 +35,9 @@ router.post("/", async (request, response) => {
 
     const game = await Games.create(id, name, max_players);
     await Games.join(game.id, id);
+
+    const io = request.app.get("io") as Server;
+    io.to(GLOBAL_ROOM).emit(GAME_CREATE, { ...game, player_count: 1 });
 
     response.redirect(`/games/${game.id}`);
   } catch (error: any) {

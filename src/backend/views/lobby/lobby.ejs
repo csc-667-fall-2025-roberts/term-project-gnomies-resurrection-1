@@ -1,92 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Lobby</title>
+    <title>Lobby - Poker</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="stylesheet" href="/css/bundle.css" />
     <script type="module" src="/js/chat.js" defer></script>
     <script type="module" src="/js/lobby.js" defer></script>
-  </head>
+</head>
 
-  <body>
-    <div class="bg"></div>
-
+<body>
+    <!-- Header with Logo & Avatar -->
     <div class="header">
+        <h1>
+            🃏 Poker
+        </h1>
         <div class="header__identity">
-            <h1>Lobby</h1>
-            <span class="user-info">Hello, <%= user.username %> (#<%= user.id %>)</span>
+            <img src="https://api.dicebear.com/7.x/fun-emoji/svg?seed=<%= user.username %>" alt="" width="40"
+                height="40" />
+            <span class="user-info">
+                <%= user.username %>
+            </span>
+            <a href="/auth/logout" class="logout-btn">Logout</a>
         </div>
-        <a href="/auth/logout" class="logout-btn">Logout</a>
     </div>
 
     <div class="container">
+        <!-- Main Section: Create + Game Lists -->
         <div class="main-content">
+            <!-- Create Game Form -->
             <div class="card">
                 <h2>Create New Game</h2>
                 <form method="post" action="/games" class="create-game-form">
                     <div class="form-row">
                         <div class="form-group">
+                            <label for="name">Game Name</label>
+                            <input type="text" name="name" placeholder="Optional" />
+                        </div>
+                        <div class="form-group">
                             <label for="max_players">Max Players</label>
-                            <input 
-                                type="number" 
-                                name="max_players" 
-                                id="max_players"
-                                placeholder="Default: 4"
-                                min="2"
-                                max="10"
-                            />
+                            <input type="number" name="max_players" value="4" min="2" max="10" />
                         </div>
                     </div>
-                    <button type="submit" class="btn-primary">Create Game</button>
+                    <button type="submit" class="btn-primary">Create</button>
                 </form>
             </div>
 
-            <div class="card games-section">
-                <h2>Available Games</h2>
-                <div id="game-list">
-                    <p class="no-games">No games available. Create one to get started!</p>
+            <!-- Two Game Lists -->
+            <div class="game-lists-container">
+                <div class="card games-section">
+                    <h2>Your Games</h2>
+                    <div id="my-game-list" class="game-list"></div>
+                </div>
+
+                <div class="card games-section">
+                    <h2>Available Games</h2>
+                    <div id="available-game-list" class="game-list"></div>
                 </div>
             </div>
         </div>
 
+        <!-- Chat Section -->
         <div class="chat-section">
             <div class="card">
                 <h2>Lobby Chat</h2>
-                <div id="message-listing"></div>
-                <div id="message-submit">
-                    <input type="text" placeholder="Type a message..." />
-                    <button>Send</button>
+                <div id="chat-area">
+                    <div id="message-listing"></div>
+                    <div id="message-submit">
+                        <input type="text" placeholder="Enter your message" />
+                        <button>Send</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Chat Message Template -->
     <template id="template-chat-message">
         <div class="chat-message">
             <div class="message-header">
                 <span class="message-username"></span>
                 <span class="message-time"></span>
             </div>
-            <div class="message-text"></div>
+            <span class="message-text"></span>
         </div>
     </template>
 
+    <!-- Game Listing Template -->
     <template id="game-listing-template">
-        <div class="game-item" data-game-id="">
+        <div class="game-item">
             <div class="game-info">
                 <span class="game-name"></span>
                 <div class="listing-meta">
                     <span class="game-state"></span>
-                    <span class="game-players"></span>
+                    <span class="max-players"></span>
                 </div>
             </div>
-            <div class="game-actions">
-                <button class="btn-join" data-action="join">Join Game</button>
-                <button class="btn-spectate" data-action="spectate">Spectate</button>
-            </div>
+            <form method="post" action="#">
+                <button class="btn-join">Join</button>
+            </form>
         </div>
     </template>
 </body>
+
 </html>
