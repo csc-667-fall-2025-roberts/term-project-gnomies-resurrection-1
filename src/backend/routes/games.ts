@@ -30,7 +30,7 @@ router.get("/", async (request, response) => {
 router.post("/", async (request, response) => {
   try {
     const { id } = request.session.user!;
-    const { max_players } = request.body;
+    const max_players = parseInt(request.body.max_players) || 4;
     // Generate random name if not provided (e.g., "brave-green-dolphin")
     const name = request.body.name?.trim() || generateGameName();
 

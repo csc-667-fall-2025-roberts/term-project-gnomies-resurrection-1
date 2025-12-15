@@ -6,7 +6,17 @@
     <title>Game — Mockup</title>
     <link rel="stylesheet" href="/css/bundle.css" />
   </head>
-  <body class="page-game">
+  <body class="page-game" data-game-id="<%= id %>">
+
+    <div class="bg"></div>
+    <div class="header">
+      <h1> <%= name %></h1>
+      <div class="header__identity">
+        <span class="user-info">Playing as: <strong><%= currentUserId %></strong></span>
+        <a href="/lobby" class="logout-btn">Return to Lobby</a>
+      </div>
+    </div>
+
     <div class="game-layout">
       <div class="game-table-area">
         <div class="table-wrapper">
@@ -142,5 +152,6 @@
         });
       })();
     </script>
+    <script src="/js/game.js" type="module"></script>
   </body>
 </html>

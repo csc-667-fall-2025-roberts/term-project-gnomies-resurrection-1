@@ -3,14 +3,16 @@
 body.page-game {
   background: var(--color-background-alt);
   color: #1f2937;
-  padding: 0;
+  padding: var(--spacing-xl);
+  min-height: 100vh;
 }
 
 .game-layout {
   display: flex;
   gap: 20px;
-  height: 100vh;
-  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px 0;
   box-sizing: border-box;
 }
 

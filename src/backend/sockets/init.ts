@@ -19,6 +19,38 @@ export const initSockets = (httpServer: HTTPServer) => {
     socket.join(session.id);
     socket.join(GLOBAL_ROOM);
 
+    socket.on("join-game-room", (gameId: number) => {
+      const roomName = `game-${gameId}`;
+      socket.join(roomName);
+      logger.info(`User ${session.user.username} joined game room: ${roomName}`);
+
+      socket.to(roomName).emit("player-joined", {
+        username: session.user.username,
+        userId: session.user.id,
+      });
+    });
+
+    socket.on("leave-game-room", (gameId: number) => {
+      const roomName = `game-${gameId}`;
+      socket.leave(roomName);
+      logger.info(`User ${session.user.username} left game room: ${roomName}`);
+      
+      socket.to(roomName).emit("player-left", {
+        username: session.user.username,
+        userId: session.user.id,
+      });
+    });
+
+    socket.on("game-chat-message", ({ gameId, message }: { gameId: number; message: string }) => {
+      const roomName = `game-${gameId}`;
+      io.to(roomName).emit("game-chat-message", {
+        username: session.user.username,
+        userId: session.user.id,
+        message,
+        timestamp: new Date().toISOString(),
+      });
+    });
+
     socket.on("close", () => {
       logger.info(`socket for user ${session.user.username} closed`);
     });
