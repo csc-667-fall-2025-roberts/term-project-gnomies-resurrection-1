@@ -5,8 +5,8 @@ RETURNING *
 `;
 
 export const JOIN_GAME = `
-INSERT INTO game_players (game_id, user_id)
-VALUES ($1, $2)
+INSERT INTO game_players (game_id, user_id, player_money)
+VALUES ($1, $2, 1000)
 `;
 
 export const LIST_GAMES = `
