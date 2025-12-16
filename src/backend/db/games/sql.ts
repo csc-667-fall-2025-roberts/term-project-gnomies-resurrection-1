@@ -44,3 +44,40 @@ export const GAME_BY_ID = `
 export const GET_PLAYER_IDS = `
   SELECT user_id FROM game_players WHERE game_id = $1
 `;
+
+// Turn management queries
+export const SET_CURRENT_TURN = `
+  UPDATE games 
+  SET current_turn_user_id = $2
+  WHERE id = $1
+  RETURNING *
+`;
+
+export const GET_CURRENT_TURN = `
+  SELECT current_turn_user_id FROM games WHERE id = $1
+`;
+
+export const GET_NEXT_PLAYER = `
+  SELECT user_id FROM game_players
+  WHERE game_id = $1 AND position > $2
+  ORDER BY position ASC
+  LIMIT 1
+`;
+
+export const GET_FIRST_PLAYER = `
+  SELECT user_id FROM game_players
+  WHERE game_id = $1
+  ORDER BY position ASC
+  LIMIT 1
+`;
+
+export const GET_PLAYER_POSITION = `
+  SELECT position FROM game_players
+  WHERE game_id = $1 AND user_id = $2
+`;
+
+export const SET_PLAYER_POSITION = `
+  UPDATE game_players
+  SET position = $3
+  WHERE game_id = $1 AND user_id = $2
+`;

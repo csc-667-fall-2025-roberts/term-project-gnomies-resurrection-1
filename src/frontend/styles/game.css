@@ -96,6 +96,22 @@ body.page-game {
   opacity: 0.35;
 }
 
+/* Turn indicator styles */
+.player-seat.active-turn {
+  border: 3px solid #22c55e;
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.5);
+}
+
+.player-area.active-turn {
+  border: 3px solid #22c55e;
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.5);
+}
+
+.player-seat--empty {
+  opacity: 0.4;
+  border-style: dashed;
+}
+
 .seat-pos-1 {
   top: -36px;
   left: 50%;
@@ -223,6 +239,16 @@ body.page-game {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+/* Disabled state when not player's turn */
+.player-controls.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.player-controls.disabled .action-btn {
+  cursor: not-allowed;
 }
 
 /* ==================== SIDEBAR ==================== */

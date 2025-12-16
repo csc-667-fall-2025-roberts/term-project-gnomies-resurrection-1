@@ -151,6 +151,16 @@ export function updateTurnIndicator(isMyTurn: boolean, currentTurnUserId: number
             seat.classList.add("active-turn");
         }
     }
+
+    // Enable/disable action buttons based on turn
+    const playerControls = document.querySelector(".player-controls");
+    if (playerControls !== null) {
+        if (isMyTurn) {
+            playerControls.classList.remove("disabled");
+        } else {
+            playerControls.classList.add("disabled");
+        }
+    }
 }
 
 /**
