@@ -29,7 +29,9 @@ export const initSockets = (httpServer: HTTPServer) => {
     // Auto-join game room if gameId provided in query params
     const gameId = socket.handshake.query.gameId as string;
     if (gameId) {
-      initGameSocket(socket, parseInt(gameId), session.user.id);
+      initGameSocket(socket, parseInt(gameId), session.user.id).catch((error) => {
+        logger.error(`Failed to join game room for user ${session.user!.id}:`, error);
+      });
     }
 
     socket.on("leave-game-room", (gameId: number) => {
