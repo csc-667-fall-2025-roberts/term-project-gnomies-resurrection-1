@@ -40,3 +40,7 @@ WHERE game_players.game_id=games.id AND user_id=$1
 export const GAME_BY_ID = `
   SELECT * FROM games WHERE id=$1
 `;
+
+export const GET_PLAYER_IDS = `
+  SELECT user_id FROM game_players WHERE game_id = $1
+`;

@@ -4,6 +4,7 @@ import { GLOBAL_ROOM } from "../../shared/keys";
 import { User } from "../../types/types";
 import { sessionMiddleware } from "../config/session";
 import logger from "../lib/logger";
+import { gameRoom, initGameSocket } from "./game-socket";
 
 export const initSockets = (httpServer: HTTPServer) => {
   const io = new Server(httpServer);
@@ -11,48 +12,49 @@ export const initSockets = (httpServer: HTTPServer) => {
   io.engine.use(sessionMiddleware);
 
   io.on("connection", (socket) => {
-    // @ts-ignore
-    const session = socket.request.session as { id: string; user: User };
+    // @ts-expect-error session is attached by middleware
+    const session = socket.request.session as { id: string; user?: User };
+
+    // Guard against invalid/expired sessions
+    if (!session.user) {
+      socket.disconnect();
+      return;
+    }
 
     logger.info(`socket for user ${session.user.username} established`);
 
     socket.join(session.id);
     socket.join(GLOBAL_ROOM);
 
-    socket.on("join-game-room", (gameId: number) => {
-      const roomName = `game-${gameId}`;
-      socket.join(roomName);
-      logger.info(`User ${session.user.username} joined game room: ${roomName}`);
-
-      socket.to(roomName).emit("player-joined", {
-        username: session.user.username,
-        userId: session.user.id,
-      });
-    });
+    // Auto-join game room if gameId provided in query params
+    const gameId = socket.handshake.query.gameId as string;
+    if (gameId) {
+      initGameSocket(socket, parseInt(gameId), session.user.id);
+    }
 
     socket.on("leave-game-room", (gameId: number) => {
-      const roomName = `game-${gameId}`;
+      const roomName = gameRoom(gameId);
       socket.leave(roomName);
-      logger.info(`User ${session.user.username} left game room: ${roomName}`);
+      logger.info(`User ${session.user!.username} left game room: ${roomName}`);
       
       socket.to(roomName).emit("player-left", {
-        username: session.user.username,
-        userId: session.user.id,
+        username: session.user!.username,
+        userId: session.user!.id,
       });
     });
 
     socket.on("game-chat-message", ({ gameId, message }: { gameId: number; message: string }) => {
-      const roomName = `game-${gameId}`;
+      const roomName = gameRoom(gameId);
       io.to(roomName).emit("game-chat-message", {
-        username: session.user.username,
-        userId: session.user.id,
+        username: session.user!.username,
+        userId: session.user!.id,
         message,
         timestamp: new Date().toISOString(),
       });
     });
 
     socket.on("close", () => {
-      logger.info(`socket for user ${session.user.username} closed`);
+      logger.info(`socket for user ${session.user!.username} closed`);
     });
   });
 
