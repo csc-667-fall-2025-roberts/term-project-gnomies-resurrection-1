@@ -99,14 +99,22 @@
       })();
 
       // dynamic seat rendering (client-only demo)
-      (function(){
+      (function () {
         const seatsContainer = document.getElementById('seats');
         const select = document.getElementById('playerCountSelect');
 
-        // positions classes for up to 8 seats (1-indexed)
-        const POS_CLASSES = ['seat-pos-1','seat-pos-2','seat-pos-3','seat-pos-4','seat-pos-5','seat-pos-6','seat-pos-7','seat-pos-8'];
+        // Preset positions for 2 to 8 players
+        const POSITION_PRESETS = {
+          2: ['seat-pos-1', 'seat-pos-5'],
+          3: ['seat-pos-1', 'seat-pos-3', 'seat-pos-5'],
+          4: ['seat-pos-1', 'seat-pos-3', 'seat-pos-5', 'seat-pos-7'],
+          5: ['seat-pos-1', 'seat-pos-2', 'seat-pos-4', 'seat-pos-6', 'seat-pos-8'],
+          6: ['seat-pos-1', 'seat-pos-2', 'seat-pos-3', 'seat-pos-5', 'seat-pos-6', 'seat-pos-8'],
+          7: ['seat-pos-1', 'seat-pos-2', 'seat-pos-3', 'seat-pos-4', 'seat-pos-6', 'seat-pos-7', 'seat-pos-8'],
+          8: ['seat-pos-1', 'seat-pos-2', 'seat-pos-3', 'seat-pos-4', 'seat-pos-5', 'seat-pos-6', 'seat-pos-7', 'seat-pos-8'],
+        };
 
-        function buildSeatLabel(playerNumber){
+        function buildSeatLabel(playerNumber) {
           const label = document.createElement('div');
           label.className = 'player-seat__label';
 
@@ -123,32 +131,24 @@
           return label;
         }
 
-        function renderSeats(count){
+        function renderSeats(count) {
           seatsContainer.innerHTML = ''; // clear
-          // create N seats
-          for(let i=1;i<=count;i++){
+          const positions = POSITION_PRESETS[count] || POSITION_PRESETS[8]; // Fallback to 8 positions if count is invalid
+
+          // Create seats based on the preset positions
+          positions.forEach((posClass, index) => {
             const seat = document.createElement('div');
-            seat.className = 'player-seat ' + POS_CLASSES[(i-1) % POS_CLASSES.length];
-            seat.appendChild(buildSeatLabel(i));
+            seat.className = 'player-seat ' + posClass;
+            seat.appendChild(buildSeatLabel(index + 1));
             seatsContainer.appendChild(seat);
-          }
-          // show empty seats (visual) for remaining positions up to 8, ghosted
-          for(let j=count+1;j<=8;j++){
-            const seat = document.createElement('div');
-            seat.className = 'player-seat ' + POS_CLASSES[(j-1) % POS_CLASSES.length] + ' player-seat--ghost';
-            const label = document.createElement('div');
-            label.className = 'player-seat__label';
-            label.textContent = 'Empty';
-            seat.appendChild(label);
-            seatsContainer.appendChild(seat);
-          }
+          });
         }
 
-        // initialize with selected value from the newly-populated select
+        // Initialize with selected value from the newly-populated select
         renderSeats(Math.max(2, Number(select.value || 7)));
 
-        // on change, re-render seats
-        select.addEventListener('change', function(e){
+        // On change, re-render seats
+        select.addEventListener('change', function (e) {
           const v = Math.max(2, Number(e.target.value) || 2);
           renderSeats(v);
         });
