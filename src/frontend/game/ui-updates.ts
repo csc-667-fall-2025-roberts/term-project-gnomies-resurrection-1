@@ -300,3 +300,83 @@ export function updateAvailableActions(
         raiseBtn.textContent = `Raise (min $${minRaise})`;
     }
 }
+
+// ==================== TURN TIMER ====================
+
+const TURN_TIMEOUT_MS = 30000; // 30 seconds
+let turnTimer: ReturnType<typeof setInterval> | null = null;
+
+/**
+ * Start the turn countdown timer
+ * @param onTimeout - Callback to execute when timer expires (auto-fold)
+ */
+export function startTurnTimer(onTimeout: () => void): void {
+    // Clear any existing timer first
+    clearTurnTimer();
+
+    let remaining = TURN_TIMEOUT_MS;
+    const timerEl = document.getElementById("turn-timer");
+    const timerFill = document.getElementById("turn-timer-fill");
+
+    // Show timer element if exists
+    if (timerEl !== null) {
+        timerEl.classList.add("turn-timer--active");
+        timerEl.textContent = `${Math.ceil(remaining / 1000)}s`;
+    }
+
+    if (timerFill !== null) {
+        timerFill.style.width = "100%";
+    }
+
+    turnTimer = setInterval(() => {
+        remaining -= 1000;
+
+        // Update timer display
+        if (timerEl !== null) {
+            timerEl.textContent = `${Math.ceil(remaining / 1000)}s`;
+        }
+
+        // Update timer bar visual
+        if (timerFill !== null) {
+            const percentage = (remaining / TURN_TIMEOUT_MS) * 100;
+            timerFill.style.width = `${percentage}%`;
+
+            // Change color when low on time
+            if (remaining <= 10000) {
+                timerFill.classList.add("turn-timer-fill--warning");
+            }
+            if (remaining <= 5000) {
+                timerFill.classList.add("turn-timer-fill--danger");
+            }
+        }
+
+        // Time's up
+        if (remaining <= 0) {
+            clearTurnTimer();
+            onTimeout();
+        }
+    }, 1000);
+}
+
+/**
+ * Clear the turn timer (when action taken or turn ends)
+ */
+export function clearTurnTimer(): void {
+    if (turnTimer !== null) {
+        clearInterval(turnTimer);
+        turnTimer = null;
+    }
+
+    // Hide timer display
+    const timerEl = document.getElementById("turn-timer");
+    const timerFill = document.getElementById("turn-timer-fill");
+
+    if (timerEl !== null) {
+        timerEl.classList.remove("turn-timer--active");
+    }
+
+    if (timerFill !== null) {
+        timerFill.style.width = "0%";
+        timerFill.classList.remove("turn-timer-fill--warning", "turn-timer-fill--danger");
+    }
+}

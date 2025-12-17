@@ -74,6 +74,68 @@ export const initSockets = (httpServer: HTTPServer) => {
       });
     });
 
+    // Handle player actions (fold, check, call, raise)
+    socket.on("player:action", async (data: { gameId: number; action: string; amount?: number }) => {
+      try {
+        const game = await Games.get(data.gameId);
+
+        // Validate it's the player's turn
+        if (game.current_turn_user_id !== session.user!.id) {
+          socket.emit("action:rejected", {
+            action: data.action,
+            reason: "Not your turn",
+          });
+          return;
+        }
+
+        // Validate game is in a betting state
+        if (!["pre-flop", "flop", "turn", "river"].includes(game.state)) {
+          socket.emit("action:rejected", {
+            action: data.action,
+            reason: "Game not in betting state",
+          });
+          return;
+        }
+
+        // Validate action type
+        const validActions = ["fold", "check", "call", "raise", "all-in"];
+        if (!validActions.includes(data.action)) {
+          socket.emit("action:rejected", {
+            action: data.action,
+            reason: "Invalid action",
+          });
+          return;
+        }
+
+        // TODO (Phase 3): Process the action
+        // - fold: set player as folded, advance turn
+        // - check: advance turn (if no bet to call)
+        // - call: deduct chips, add to pot, advance turn
+        // - raise: validate amount, deduct chips, add to pot, advance turn
+        // - all-in: move all chips to pot
+
+        // For now, just confirm the action was received
+        socket.emit("action:confirmed", { action: data.action });
+        logger.info(`User ${session.user!.id} performed ${data.action} in game ${data.gameId}`);
+
+        // Broadcast to all players in the game room that an action was taken
+        const roomName = gameRoom(data.gameId);
+        io.to(roomName).emit("player:actionTaken", {
+          userId: session.user!.id,
+          username: session.user!.username,
+          action: data.action,
+          amount: data.amount,
+        });
+
+      } catch (error) {
+        logger.error(`Error processing action for user ${session.user!.id}:`, error);
+        socket.emit("action:rejected", {
+          action: data.action,
+          reason: "Server error",
+        });
+      }
+    });
+
     // Handle socket disconnect - notify game rooms and remove from database
     socket.on("disconnect", async () => {
       logger.info(`socket for user ${session.user!.username} disconnected`);

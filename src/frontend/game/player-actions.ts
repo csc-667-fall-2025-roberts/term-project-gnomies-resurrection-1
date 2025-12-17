@@ -12,6 +12,7 @@
 
 import type { BettingAction } from "./types";
 import { validateRaise, formatChips } from "./betting";
+import { clearTurnTimer } from "./ui-updates";
 
 // Track current betting state
 let currentAction: BettingAction | null = null;
@@ -201,6 +202,9 @@ function showRaiseError(message: string): void {
  * Disable all action buttons
  */
 function disableAllActions(): void {
+    // Clear the turn timer when action is taken
+    clearTurnTimer();
+
     const buttons = document.querySelectorAll<HTMLButtonElement>(".action-btn");
     buttons.forEach((btn) => {
         btn.disabled = true;

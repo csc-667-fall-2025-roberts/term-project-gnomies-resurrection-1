@@ -13,7 +13,9 @@ import {
     updatePlayerSeats,
     updateTurnIndicator,
     updateHandStage,
-    updateAvailableActions
+    updateAvailableActions,
+    startTurnTimer,
+    clearTurnTimer
 } from "./game/ui-updates";
 import {
     initializePlayerActions,
@@ -29,10 +31,47 @@ const gameId = document.body.dataset.gameId || "";
 const socket = socketIo({ query: { gameId } });
 
 /**
- * Handle socket connection
+ * Show reconnecting overlay when disconnected
+ */
+function showReconnectingUI(): void {
+    // Explicit null check - only create if doesn't exist
+    if (document.getElementById("reconnecting-overlay") !== null) {
+        return;
+    }
+    const overlay = document.createElement("div");
+    overlay.id = "reconnecting-overlay";
+    overlay.innerHTML = '<div class="reconnecting-message">Reconnecting...</div>';
+    document.body.appendChild(overlay);
+}
+
+/**
+ * Hide reconnecting overlay when connected
+ */
+function hideReconnectingUI(): void {
+    const overlay = document.getElementById("reconnecting-overlay");
+    if (overlay !== null) {
+        overlay.remove();
+    }
+}
+
+/**
+ * Handle socket connection/reconnection
+ * Re-request game state to sync after reconnect
  */
 socket.on("connect", () => {
-    console.log("Connected to game server");
+    console.log("Connected/Reconnected to game server");
+    socket.emit("game:requestState", { gameId });
+    hideReconnectingUI();
+});
+
+/**
+ * Handle socket disconnection
+ * Show visual feedback to user
+ */
+socket.on("disconnect", () => {
+    console.log("Disconnected from game server");
+    showReconnectingUI();
+    clearTurnTimer();
 });
 
 /**
@@ -129,6 +168,7 @@ socket.on("betting:action", (data: any) => {
 
 /**
  * Handle turn changed
+ * Starts/stops timer based on whose turn it is
  */
 socket.on("turn:changed", (data: any) => {
     console.log("Turn changed:", data);
@@ -150,6 +190,20 @@ socket.on("turn:changed", (data: any) => {
         data.min_raise,
         data.max_raise || data.player_stack || 0
     );
+
+    // Timer logic: start when it's my turn, clear when not
+    if (data.is_my_turn) {
+        startTurnTimer(() => {
+            // Auto-fold on timeout
+            console.log("Turn timeout - auto-folding");
+            socket.emit("player:action", {
+                gameId,
+                action: "fold"
+            });
+        });
+    } else {
+        clearTurnTimer();
+    }
 });
 
 /**
