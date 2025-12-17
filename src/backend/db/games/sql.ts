@@ -111,3 +111,11 @@ export const GET_PLAYERS_WITH_STATS = `
   WHERE gp.game_id = $1
   ORDER BY gp.position NULLS LAST, gp.joined_at ASC
 `;
+
+// End game query - transitions to game-over state
+export const END_GAME = `
+  UPDATE games 
+  SET state = 'game-over'
+  WHERE id = $1
+  RETURNING *
+`;

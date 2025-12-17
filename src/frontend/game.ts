@@ -237,20 +237,75 @@ socket.on("hand:complete", (data: any) => {
 });
 
 /**
- * Handle game ended
+ * Handle game ended (lowercase - for internal events)
  */
-socket.on("game:ended", (data: any) => {
-    // TODO: Show final results, redirect to lobby
+socket.on("game:ended", (data: { winner?: { username: string } }) => {
     console.log("Game ended:", data);
-    alert(`Game over! Winner: ${data.winner?.username || "Unknown"}`);
+    const winnerName = data.winner?.username || "Unknown";
+    showGameOverModal(winnerName);
 });
+
+/**
+ * Handle GAME_ENDED (uppercase - from HTTP route broadcast)
+ */
+socket.on("GAME_ENDED", (data: { gameId: number }) => {
+    console.log("Game ended via route:", data);
+    showGameOverModal("The game has been ended by the owner.");
+});
+
+/**
+ * Show game over modal and redirect to lobby
+ */
+function showGameOverModal(message: string): void {
+    // Create modal overlay
+    const overlay = document.createElement("div");
+    overlay.id = "game-over-overlay";
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+    `;
+
+    const modal = document.createElement("div");
+    modal.style.cssText = `
+        background: white;
+        padding: 32px 48px;
+        border-radius: 16px;
+        text-align: center;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    `;
+    modal.innerHTML = `
+        <h2 style="margin: 0 0 16px; font-size: 24px;">🎉 Game Over!</h2>
+        <p style="margin: 0 0 24px; font-size: 16px; color: #666;">${message}</p>
+        <a href="/lobby" style="
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+        ">Return to Lobby</a>
+    `;
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+}
 
 /**
  * Handle errors
  */
-socket.on("error", (error: any) => {
+socket.on("error", (error: { message?: string }) => {
     console.error("Socket error:", error);
-    alert(`Error: ${error.message || "Unknown error"}`);
+    const errorMessage = error.message || "Unknown error";
+    alert(`Error: ${errorMessage}`);
 });
 
 /**

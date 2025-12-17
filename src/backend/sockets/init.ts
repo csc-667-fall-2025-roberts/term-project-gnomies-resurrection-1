@@ -6,6 +6,7 @@ import { sessionMiddleware } from "../config/session";
 import { Games } from "../db";
 import logger from "../lib/logger";
 import { gameRoom, initGameSocket } from "./game-socket";
+import { sanitizeString } from "../utils/sanitize";
 
 export const initSockets = (httpServer: HTTPServer) => {
   const io = new Server(httpServer);
@@ -66,10 +67,13 @@ export const initSockets = (httpServer: HTTPServer) => {
 
     socket.on("game-chat-message", ({ gameId, message }: { gameId: number; message: string }) => {
       const roomName = gameRoom(gameId);
+      // Sanitize chat message to prevent XSS
+      const sanitizedMessage = sanitizeString(message);
+
       io.to(roomName).emit("game-chat-message", {
         username: session.user!.username,
         userId: session.user!.id,
-        message,
+        message: sanitizedMessage,
         timestamp: new Date().toISOString(),
       });
     });

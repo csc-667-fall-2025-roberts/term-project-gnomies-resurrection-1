@@ -2,6 +2,7 @@ import { Game, GameState } from "../../../types/types";
 import db from "../connection";
 import {
   CREATE_GAME,
+  END_GAME,
   GAME_BY_ID,
   GAMES_BY_USER,
   GET_CURRENT_TURN,
@@ -109,9 +110,14 @@ const advanceTurn = async (gameId: number): Promise<number> => {
 const start = async (gameId: number, firstPlayerId: number) =>
   await db.one<Game>(START_GAME, [gameId, firstPlayerId]);
 
+// End game method - transitions to game-over state
+const endGame = async (gameId: number) =>
+  await db.one<Game>(END_GAME, [gameId]);
+
 export {
   advanceTurn,
   create,
+  endGame,
   get,
   getByUser,
   getCurrentTurn,

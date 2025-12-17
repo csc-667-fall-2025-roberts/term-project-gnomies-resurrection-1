@@ -84,7 +84,8 @@
       <div class="game-meta">
         <div class="meta-title">Game Info</div>
         <div><strong>Name:</strong> <%- name %></div>
-        <div><strong>State:</strong> <span id="game-state"><%- state %></span></div>
+        <div><strong>State:</strong> <span id="game-state" class="game-state-badge game-state--<%- state %>"><%- state
+              %></span></div>
         <div><strong>Players:</strong> <span id="player-count"><%- players.length %></span> / <%- maxPlayers %></div>
 
         <% if (currentUserId===created_by && state==='lobby' ) { %>
@@ -96,7 +97,21 @@
           </form>
           <% } %>
 
-            <div class="meta-return"><a href="/lobby">Return to lobby</a></div>
+            <% if (currentUserId===created_by && state!=='lobby' && state!=='game-over' ) { %>
+              <form method="post" action="/games/<%- id %>/end" class="end-game-form">
+                <button type="submit" class="btn-end-game">
+                  🏁 End Game
+                </button>
+              </form>
+              <% } %>
+
+                <% if (state==='game-over' ) { %>
+                  <div class="game-over-message">
+                    <strong>🎉 Game Over!</strong>
+                  </div>
+                  <% } %>
+
+                    <div class="meta-return"><a href="/lobby">Return to lobby</a></div>
       </div>
 
       <div class="game-chat">

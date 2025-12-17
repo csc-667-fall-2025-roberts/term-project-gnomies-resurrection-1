@@ -330,6 +330,74 @@ body.page-game {
   text-align: center;
 }
 
+/* End Game Button */
+.end-game-form {
+  margin-top: 12px;
+}
+
+.btn-end-game {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: var(--font-weight-bold);
+  font-family: var(--font-family);
+  transition: var(--transition);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.btn-end-game:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+  transform: translateY(-1px);
+}
+
+.btn-end-game:active {
+  transform: translateY(0);
+}
+
+/* Game State Badge */
+.game-state-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+}
+
+.game-state--lobby {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.game-state--pre-flop,
+.game-state--flop,
+.game-state--turn,
+.game-state--river {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.game-state--game-over {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+/* Game Over Message */
+.game-over-message {
+  margin-top: 12px;
+  padding: 12px;
+  background: #fef3c7;
+  border-radius: 8px;
+  text-align: center;
+  color: #b45309;
+}
+
 .game-chat {
   background: var(--color-surface);
   border-radius: 12px;

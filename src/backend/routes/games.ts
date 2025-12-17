@@ -5,8 +5,10 @@ import { GAME_CREATE, GAME_LISTING, GLOBAL_ROOM } from "../../shared/keys";
 import { Games } from "../db";
 import { generateGameName } from "../lib/game-names";
 import logger from "../lib/logger";
+import { requireGamePlayer } from "../middleware/gamePermissions";
 import { startGame } from "../services/game-service";
-import { broadcastGameStarted, broadcastGameUpdate, broadcastJoin } from "../sockets/game-socket";
+import { broadcastGameStarted, broadcastGameUpdate, broadcastJoin, gameRoom } from "../sockets/game-socket";
+import { sanitizeString, validateGameName, getGameNameError } from "../utils/sanitize";
 
 const router = express.Router();
 
@@ -32,8 +34,20 @@ router.get("/", async (request, response) => {
 router.post("/", async (request, response) => {
   try {
     const { id } = request.session.user!;
-    const max_players = parseInt(request.body.max_players) || 4; // Default to 4 if not provided
-    const name = request.body.name?.trim() || generateGameName();
+    const max_players = parseInt(request.body.max_players) || 4;
+    let name = request.body.name?.trim() || "";
+
+    // Validate and sanitize game name
+    if (name !== "") {
+      if (!validateGameName(name)) {
+        logger.warn(`Invalid game name attempted: ${name}`);
+        response.redirect("/lobby?error=invalid_name");
+        return;
+      }
+      name = sanitizeString(name);
+    } else {
+      name = generateGameName();
+    }
 
     const game = await Games.create(id, name, max_players);
     await Games.join(game.id, id);
@@ -42,13 +56,13 @@ router.post("/", async (request, response) => {
     io.to(GLOBAL_ROOM).emit(GAME_CREATE, { ...game, player_count: 1 });
 
     response.redirect(`/games/${game.id}`);
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error("Error creating game:", error);
     response.redirect("/lobby");
   }
 });
 
-router.get("/:id", async (request, response) => {
+router.get("/:id", requireGamePlayer, async (request, response) => {
   const gameId = parseInt(request.params.id);
   const user = request.session.user!;
 
@@ -61,9 +75,9 @@ router.get("/:id", async (request, response) => {
       currentUserId: user.id,
       currentUsername: user.username,
       maxPlayers: game.max_players,
-      players, // Real player data!
+      players,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error(`Error loading game ${gameId}:`, error);
     response.redirect("/lobby");
   }
@@ -152,8 +166,43 @@ router.post("/:id/start", async (request, response) => {
     broadcastGameStarted(io, gameId, firstPlayerId);
 
     response.redirect(`/games/${gameId}`);
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error(`Error starting game ${gameId}:`, error);
+    response.redirect(`/games/${gameId}`);
+  }
+});
+
+/**
+ * End a game
+ * Only game owner can end the game
+ */
+router.post("/:id/end", async (request, response) => {
+  const gameId = parseInt(request.params.id);
+  const userId = request.session.user!.id;
+
+  try {
+    // Verify user is game owner
+    const game = await Games.get(gameId);
+    if (game.created_by !== userId) {
+      logger.warn(`User ${userId} tried to end game ${gameId} without being owner`);
+      response.status(403).redirect(`/games/${gameId}`);
+      return;
+    }
+
+    // End the game
+    await Games.endGame(gameId);
+
+    // Broadcast to all players in the game room
+    const io = request.app.get("io") as Server;
+    io.to(gameRoom(gameId)).emit("GAME_ENDED", { gameId });
+
+    // Also broadcast to lobby that game ended
+    io.to(GLOBAL_ROOM).emit("games:updated", { gameId, state: "game-over" });
+
+    logger.info(`Game ${gameId} ended by owner ${userId}`);
+    response.redirect("/lobby");
+  } catch (error: unknown) {
+    logger.error(`Error ending game ${gameId}:`, error);
     response.redirect(`/games/${gameId}`);
   }
 });
