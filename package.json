@@ -7,7 +7,7 @@
     "build:frontend": "vite build",
     "build": "rm -rf dist && npm run build:backend && npm run build:frontend",
     "start": "node dist/backend/server.js",
-    "start:prod": "NODE_OPTIONS='--import tsx' node scripts/migrate-safe.ts && node dist/backend/server.js",
+    "deploy": "NODE_OPTIONS='--import tsx' tsx scripts/deploy.ts",
     "dev:frontend": "vite build --watch --mode development",
     "dev:backend": "tsx watch --clear-screen=false src/backend/server.ts src/backend/views",
     "dev": "concurrently --names \"backend,frontend\" --prefix-colors \"green,blue\" \"npm run dev:backend\" \"npm run dev:frontend\"",
