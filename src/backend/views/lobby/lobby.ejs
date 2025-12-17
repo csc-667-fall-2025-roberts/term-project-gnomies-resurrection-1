@@ -12,6 +12,14 @@
 </head>
 
 <body>
+    <!-- Error Banner -->
+    <% if (typeof error !== 'undefined' && error !== null) { %>
+    <div class="error-banner">
+        <span class="error-message"><%= error %></span>
+        <button class="error-dismiss" onclick="this.parentElement.remove()">&times;</button>
+    </div>
+    <% } %>
+
     <!-- Header with Logo & Avatar -->
     <div class="header">
         <h1>

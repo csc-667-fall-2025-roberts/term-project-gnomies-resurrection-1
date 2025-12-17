@@ -75,11 +75,35 @@ router.post("/:game_id/join", async (request, response) => {
   const gameId = parseInt(game_id);
 
   try {
+    // Validate game exists and get current state
+    const game = await Games.get(gameId);
+    const playerIds = await Games.getPlayerIds(gameId);
+
+    // Idempotent: if user already in game, just redirect to game page
+    if (playerIds.includes(id)) {
+      response.redirect(`/games/${gameId}`);
+      return;
+    }
+
+    // Check if game has already started
+    if (game.state !== "lobby") {
+      logger.warn(`User ${id} tried to join game ${gameId} that already started`);
+      response.redirect("/lobby?error=game_started");
+      return;
+    }
+
+    // Check if game is full
+    if (playerIds.length >= game.max_players) {
+      logger.warn(`User ${id} tried to join full game ${gameId}`);
+      response.redirect("/lobby?error=game_full");
+      return;
+    }
+
     await Games.join(gameId, id);
 
     // Get updated player count
-    const playerIds = await Games.getPlayerIds(gameId);
-    const playerCount = playerIds.length;
+    const updatedPlayerIds = await Games.getPlayerIds(gameId);
+    const playerCount = updatedPlayerIds.length;
 
     const io = request.app.get("io") as Server;
 
@@ -89,10 +113,10 @@ router.post("/:game_id/join", async (request, response) => {
     // Broadcast to lobby users that this game's player count changed
     broadcastGameUpdate(io, gameId, playerCount);
 
-    response.redirect(`/games/${game_id}`);
+    response.redirect(`/games/${gameId}`);
   } catch (error: any) {
     logger.error(`Error joining game ${gameId}:`, error);
-    response.redirect("/lobby");
+    response.redirect("/lobby?error=join_failed");
   }
 });
 

@@ -4,3 +4,8 @@ logs/
 .env
 src/backend/public/js/
 src/backend/public/assets/
+
+.agent/
+professor_sample_code/
+jrob-term-project/
+.DS_Store

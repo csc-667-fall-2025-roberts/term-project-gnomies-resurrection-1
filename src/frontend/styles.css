@@ -31,6 +31,57 @@ a:hover {
 
 /* ==================== COMMON COMPONENTS ==================== */
 
+/* Error Banner - displays at top of page for redirects with error params */
+.error-banner {
+  max-width: 1400px;
+  margin: 0 auto 1rem;
+  padding: 1rem 1.5rem;
+  background: #fee2e2;
+  border: 2px solid #f87171;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  animation: fadeInDown 0.3s ease;
+}
+
+.error-banner .error-message {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  color: #991b1b;
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+.error-banner .error-dismiss {
+  background: none;
+  border: none;
+  color: #991b1b;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.error-banner .error-dismiss:hover {
+  opacity: 1;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .bg {
   position: fixed;
   inset: 0;
