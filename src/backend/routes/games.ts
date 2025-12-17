@@ -6,7 +6,7 @@ import { Games } from "../db";
 import { generateGameName } from "../lib/game-names";
 import logger from "../lib/logger";
 import { startGame } from "../services/game-service";
-import { broadcastGameStarted } from "../sockets/game-socket";
+import { broadcastGameStarted, broadcastGameUpdate, broadcastJoin } from "../sockets/game-socket";
 
 const router = express.Router();
 
@@ -50,24 +50,50 @@ router.post("/", async (request, response) => {
 
 router.get("/:id", async (request, response) => {
   const gameId = parseInt(request.params.id);
-  const currentUserId = request.session.user!.id;
+  const user = request.session.user!;
 
-  const game = await Games.get(gameId);
+  try {
+    const game = await Games.get(gameId);
+    const players = await Games.getPlayersWithStats(gameId);
 
-  response.render("games/game", {
-    ...game,
-    currentUserId,
-    maxPlayers: game.max_players,
-  });
+    response.render("games/game", {
+      ...game,
+      currentUserId: user.id,
+      currentUsername: user.username,
+      maxPlayers: game.max_players,
+      players, // Real player data!
+    });
+  } catch (error: any) {
+    logger.error(`Error loading game ${gameId}:`, error);
+    response.redirect("/lobby");
+  }
 });
 
 router.post("/:game_id/join", async (request, response) => {
   const { id } = request.session.user!;
   const { game_id } = request.params;
+  const gameId = parseInt(game_id);
 
-  await Games.join(parseInt(game_id), id);
+  try {
+    await Games.join(gameId, id);
 
-  response.redirect(`/games/${game_id}`);
+    // Get updated player count
+    const playerIds = await Games.getPlayerIds(gameId);
+    const playerCount = playerIds.length;
+
+    const io = request.app.get("io") as Server;
+
+    // Broadcast to players in the game that someone joined
+    broadcastJoin(io, gameId);
+
+    // Broadcast to lobby users that this game's player count changed
+    broadcastGameUpdate(io, gameId, playerCount);
+
+    response.redirect(`/games/${game_id}`);
+  } catch (error: any) {
+    logger.error(`Error joining game ${gameId}:`, error);
+    response.redirect("/lobby");
+  }
 });
 
 /**

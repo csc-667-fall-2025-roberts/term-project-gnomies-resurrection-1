@@ -32,6 +32,12 @@ const createGameElement = (game: Game, isMyGame: boolean = false): DocumentFragm
 
   const gameItem = gameItemTemplate.content.cloneNode(true) as DocumentFragment;
 
+  // Get the root element and add data-game-id for real-time updates
+  const gameItemEl = gameItem.querySelector(".game-item") as HTMLElement | null;
+  if (gameItemEl !== null) {
+    gameItemEl.dataset.gameId = String(game.id);
+  }
+
   // Set game name
   const nameEl = gameItem.querySelector(".game-name");
   if (nameEl !== null) {
@@ -124,3 +130,29 @@ export const appendGame = (game: Game): void => {
   }
 };
 
+/**
+ * Update a specific game's player count in the lobby display
+ * @param gameId - The game ID to update
+ * @param playerCount - The new player count
+ */
+export const updateGamePlayerCount = (gameId: number, playerCount: number): void => {
+  // Find the game element in both lists
+  const gameElements = document.querySelectorAll<HTMLElement>(`[data-game-id="${gameId}"]`);
+
+  if (gameElements.length === 0) {
+    // Game not found in current view, reload the full list
+    loadGames();
+    return;
+  }
+
+  gameElements.forEach((gameEl) => {
+    const playersEl = gameEl.querySelector(".max-players");
+    if (playersEl !== null) {
+      // Get max players from the current text (e.g., "2/4 players" -> 4)
+      const currentText = playersEl.textContent || "";
+      const maxMatch = currentText.match(/\/(\d+)/);
+      const maxPlayers = maxMatch ? maxMatch[1] : "4";
+      playersEl.textContent = `${playerCount}/${maxPlayers} players`;
+    }
+  });
+};

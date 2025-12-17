@@ -9,6 +9,11 @@ INSERT INTO game_players (game_id, user_id, player_money)
 VALUES ($1, $2, 1000)
 `;
 
+export const LEAVE_GAME = `
+DELETE FROM game_players
+WHERE game_id = $1 AND user_id = $2
+`;
+
 export const LIST_GAMES = `
 SELECT 
   g.*,
@@ -89,4 +94,20 @@ export const START_GAME = `
       started_at = CURRENT_TIMESTAMP
   WHERE id = $1
   RETURNING *
+`;
+
+// Player stats query for game page
+export const GET_PLAYERS_WITH_STATS = `
+  SELECT
+    u.id as user_id,
+    u.username,
+    u.email,
+    gp.position,
+    gp.player_money as chip_count,
+    gp.bet_amount as current_bet,
+    gp.role
+  FROM game_players gp
+  JOIN users u ON gp.user_id = u.id
+  WHERE gp.game_id = $1
+  ORDER BY gp.position NULLS LAST, gp.joined_at ASC
 `;

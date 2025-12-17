@@ -4,21 +4,17 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Game — Mockup</title>
+  <title>Game — <%- name %></title>
   <link rel="stylesheet" href="/css/bundle.css" />
 </head>
 
-<body class="page-game" data-game-id="<%= id %>">
+<body class="page-game" data-game-id="<%- id %>">
 
   <div class="bg"></div>
   <div class="header">
-    <h1>
-      <%= name %>
-    </h1>
+    <h1><%- name %></h1>
     <div class="header__identity">
-      <span class="user-info">Playing as: <strong>
-          <%= currentUserId %>
-        </strong></span>
+      <span class="user-info">Playing as: <strong><%- currentUsername %></strong></span>
       <a href="/lobby" class="logout-btn">Return to Lobby</a>
     </div>
   </div>
@@ -27,30 +23,50 @@
     <div class="game-table-area">
       <div class="table-wrapper">
         <div class="poker-table">
-          <div class="pot">Pot: $12.75</div>
+          <div class="pot" id="pot-display">Pot: $<%- pot_money || 0 %></div>
 
-          <div class="community-cards">
-            <div class="playing-card">A♠</div>
-            <div class="playing-card">8♦</div>
-            <div class="playing-card">Q♣</div>
+          <div class="community-cards" id="community-cards">
+            <!-- Community cards will be rendered dynamically -->
           </div>
 
-          <div class="chips chips--south"><span class="stack">$45</span></div>
-          <div class="chips chips--west"><span class="stack">$35</span></div>
-          <div class="chips chips--north-east"><span class="stack">$5</span></div>
+          <!-- Real player seats from database -->
+          <div id="seats" class="player-seats">
+            <% var seatClasses=['seat-pos-1', 'seat-pos-3' , 'seat-pos-5' , 'seat-pos-7' , 'seat-pos-2' , 'seat-pos-4'
+              , 'seat-pos-6' , 'seat-pos-8' ]; %>
+              <% for (var pi=0; pi < players.length; pi++) { %>
+                <% var player=players[pi]; %>
+                  <% var playerPos=player.position || (pi + 1); %>
+                    <% var posClass=seatClasses[playerPos - 1] || 'seat-pos-' + (pi + 1); %>
+                      <% var isMyTurn=player.user_id===current_turn_user_id; %>
+                        <div class="player-seat <%- posClass %><% if (isMyTurn) { %> active-turn<% } %>"
+                          data-user-id="<%- player.user_id %>">
+                          <div class="player-seat__label">
+                            <strong><%- player.username %></strong>
+                            <div class="player-seat__stack">$<%- player.chip_count %></div>
+                            <% if (player.current_bet> 0) { %>
+                              <div class="current-bet">Bet: $<%- player.current_bet %></div>
+                              <% } %>
+                          </div>
+                        </div>
+                        <% } %>
 
-          <!-- dynamic seats container -->
-          <div id="seats"></div>
+                          <!-- Empty seats for remaining positions -->
+                          <% for (var ei=players.length; ei < maxPlayers; ei++) { %>
+                            <% var emptyPosClass=seatClasses[ei] || 'seat-pos-' + (ei + 1); %>
+                              <div class="player-seat <%- emptyPosClass %> player-seat--empty">
+                                <div class="player-seat__label">Empty</div>
+                              </div>
+                              <% } %>
+          </div>
 
           <div class="player-controls">
-            <div class="player-hand-cards">
-              <div class="playing-card playing-card--small">A♠</div>
-              <div class="playing-card playing-card--small">4♥</div>
+            <div class="player-hand-cards" id="player-hand">
+              <!-- Player's hole cards will be rendered dynamically -->
             </div>
-            <button class="action-btn">Fold</button>
-            <button class="action-btn action-btn--call">Call</button>
+            <button class="action-btn btn-fold">Fold</button>
+            <button class="action-btn action-btn--call btn-call">Call</button>
             <div class="action-group">
-              <button class="action-btn action-btn--raise">Raise</button>
+              <button class="action-btn action-btn--raise btn-raise">Raise</button>
               <input class="raise-input" type="number" min="1" value="5" aria-label="raise amount" />
             </div>
           </div>
@@ -60,25 +76,13 @@
 
     <div class="game-sidebar">
       <div class="game-meta">
-        <div class="meta-title">Game</div>
-        <!--<div><strong>ID:</strong> <%= id %></div>-->
-        <div><strong>Name:</strong>
-          <%= name %>
-        </div>
-        <div><strong>Host:</strong>
-          <%= created_by %>
-        </div>
-
-        <!-- players demo control (dropdown) -->
-        <div class="meta-row">
-          <label class="meta-label" for="playerCountSelect">Players:</label>
-          <!-- populate options client-side to avoid literal EJS output in the browser -->
-          <select id="playerCountSelect" aria-label="number of players"></select>
-          <small class="meta-hint">demo only</small>
-        </div>
+        <div class="meta-title">Game Info</div>
+        <div><strong>Name:</strong> <%- name %></div>
+        <div><strong>State:</strong> <span id="game-state"><%- state %></span></div>
+        <div><strong>Players:</strong> <span id="player-count"><%- players.length %></span> / <%- maxPlayers %></div>
 
         <% if (currentUserId===created_by && state==='lobby' ) { %>
-          <form method="post" action="/games/<%= id %>/start" class="start-game-form">
+          <form method="post" action="/games/<%- id %>/start" class="start-game-form">
             <button type="submit" class="btn-start-game">
               🎮 Start Game
             </button>
@@ -91,88 +95,14 @@
 
       <div class="game-chat">
         <div class="game-chat__title">Chat</div>
-        <div class="messages">
-          <div class="message">Player 1: Hurry up already</div>
-          <div class="message">Player 2: i think they're afk</div>
-          <div class="message typing">Player 4 is typing...</div>
+        <div id="game-chat-messages" class="messages">
+          <!-- Chat messages will be populated dynamically -->
         </div>
-        <input placeholder="Say something..." />
+        <input id="game-chat-input" placeholder="Say something..." />
       </div>
     </div>
   </div>
 
-  <script>
-    // populate the player count dropdown client-side
-    (function populatePlayerSelect() {
-      const sel = document.getElementById('playerCountSelect');
-      const maxPlayers = parseInt('<%= maxPlayers %>', 10); // Ensure maxPlayers is parsed as an integer
-      const defaultCount = Math.min(maxPlayers, 7); // Default to 7 or maxPlayers, whichever is smaller
-
-      for (let i = 2; i <= maxPlayers; i++) {
-        const opt = document.createElement('option');
-        opt.value = i;
-        opt.textContent = i;
-        if (i === defaultCount) opt.selected = true;
-        sel.appendChild(opt);
-      }
-    })();
-
-    // dynamic seat rendering (client-only demo)
-    (function () {
-      const seatsContainer = document.getElementById('seats');
-      const select = document.getElementById('playerCountSelect');
-
-      // Preset positions for 2 to 8 players
-      const POSITION_PRESETS = {
-        2: ['seat-pos-1', 'seat-pos-5'],
-        3: ['seat-pos-1', 'seat-pos-3', 'seat-pos-5'],
-        4: ['seat-pos-1', 'seat-pos-3', 'seat-pos-5', 'seat-pos-7'],
-        5: ['seat-pos-1', 'seat-pos-2', 'seat-pos-4', 'seat-pos-6', 'seat-pos-8'],
-        6: ['seat-pos-1', 'seat-pos-2', 'seat-pos-3', 'seat-pos-5', 'seat-pos-6', 'seat-pos-8'],
-        7: ['seat-pos-1', 'seat-pos-2', 'seat-pos-3', 'seat-pos-4', 'seat-pos-6', 'seat-pos-7', 'seat-pos-8'],
-        8: ['seat-pos-1', 'seat-pos-2', 'seat-pos-3', 'seat-pos-4', 'seat-pos-5', 'seat-pos-6', 'seat-pos-7', 'seat-pos-8'],
-      };
-
-      function buildSeatLabel(playerNumber) {
-        const label = document.createElement('div');
-        label.className = 'player-seat__label';
-
-        const playerName = document.createElement('strong');
-        playerName.textContent = 'P' + playerNumber;
-
-        const stack = document.createElement('div');
-        stack.className = 'player-seat__stack';
-        stack.textContent = '$' + (10 * playerNumber);
-
-        label.appendChild(playerName);
-        label.appendChild(stack);
-
-        return label;
-      }
-
-      function renderSeats(count) {
-        seatsContainer.innerHTML = ''; // clear
-        const positions = POSITION_PRESETS[count] || POSITION_PRESETS[8]; // Fallback to 8 positions if count is invalid
-
-        // Create seats based on the preset positions
-        positions.forEach((posClass, index) => {
-          const seat = document.createElement('div');
-          seat.className = 'player-seat ' + posClass;
-          seat.appendChild(buildSeatLabel(index + 1));
-          seatsContainer.appendChild(seat);
-        });
-      }
-
-      // Initialize with selected value from the newly-populated select
-      renderSeats(Math.max(2, Number(select.value || 7)));
-
-      // On change, re-render seats
-      select.addEventListener('change', function (e) {
-        const v = Math.max(2, Number(e.target.value) || 2);
-        renderSeats(v);
-      });
-    })();
-  </script>
   <script src="/js/game.js" type="module"></script>
 </body>
 

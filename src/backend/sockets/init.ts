@@ -3,6 +3,7 @@ import { Server } from "socket.io";
 import { GLOBAL_ROOM } from "../../shared/keys";
 import { User } from "../../types/types";
 import { sessionMiddleware } from "../config/session";
+import { Games } from "../db";
 import logger from "../lib/logger";
 import { gameRoom, initGameSocket } from "./game-socket";
 
@@ -34,11 +35,29 @@ export const initSockets = (httpServer: HTTPServer) => {
       });
     }
 
+    // Handle game state request - return full game state to requesting client
+    socket.on("game:requestState", async ({ gameId }: { gameId: string | number }) => {
+      try {
+        const parsedGameId = typeof gameId === "string" ? parseInt(gameId) : gameId;
+        const game = await Games.get(parsedGameId);
+        const players = await Games.getPlayersWithStats(parsedGameId);
+
+        socket.emit("game:state", {
+          ...game,
+          players,
+          is_my_turn: game.current_turn_user_id === session.user!.id,
+        });
+      } catch (error) {
+        logger.error(`Error fetching game state for game ${gameId}:`, error);
+        socket.emit("error", { message: "Failed to fetch game state" });
+      }
+    });
+
     socket.on("leave-game-room", (gameId: number) => {
       const roomName = gameRoom(gameId);
       socket.leave(roomName);
       logger.info(`User ${session.user!.username} left game room: ${roomName}`);
-      
+
       socket.to(roomName).emit("player-left", {
         username: session.user!.username,
         userId: session.user!.id,
@@ -55,8 +74,43 @@ export const initSockets = (httpServer: HTTPServer) => {
       });
     });
 
-    socket.on("close", () => {
-      logger.info(`socket for user ${session.user!.username} closed`);
+    // Handle socket disconnect - notify game rooms and remove from database
+    socket.on("disconnect", async () => {
+      logger.info(`socket for user ${session.user!.username} disconnected`);
+
+      // If user was in a game room (from query params), handle leaving
+      if (gameId) {
+        const parsedGameId = parseInt(gameId);
+        const roomName = gameRoom(parsedGameId);
+
+        try {
+          // Check if game is in lobby state - if so, remove player from database
+          const game = await Games.get(parsedGameId);
+          if (game.state === "lobby") {
+            // Remove player from database
+            await Games.leave(parsedGameId, session.user!.id);
+            logger.info(`Removed user ${session.user!.username} from game ${parsedGameId} (lobby state)`);
+
+            // Get updated player count for lobby broadcast
+            const playerIds = await Games.getPlayerIds(parsedGameId);
+
+            // Broadcast to lobby that player count changed
+            io.to(GLOBAL_ROOM).emit("games:updated", {
+              gameId: parsedGameId,
+              playerCount: playerIds.length
+            });
+          }
+        } catch (error) {
+          logger.error(`Error handling disconnect for user ${session.user!.id} from game ${parsedGameId}:`, error);
+        }
+
+        // Notify other players in the game room
+        io.to(roomName).emit("player-left", {
+          username: session.user!.username,
+          userId: session.user!.id,
+        });
+        logger.info(`Broadcast player-left to room ${roomName} for user ${session.user!.username}`);
+      }
     });
   });
 

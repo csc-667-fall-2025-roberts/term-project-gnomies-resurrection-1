@@ -7,7 +7,7 @@
 import socketIo from "socket.io-client";
 import * as EVENTS from "../shared/keys";
 import type { Game } from "../types/types";
-import { appendGame, loadGames, renderGames } from "./lobby/load-games";
+import { appendGame, loadGames, renderGames, updateGamePlayerCount } from "./lobby/load-games";
 
 const socket = socketIo();
 
@@ -26,6 +26,16 @@ socket.on(EVENTS.GAME_LISTING, (data: { myGames: Game[]; availableGames: Game[] 
 socket.on(EVENTS.GAME_CREATE, (game: Game) => {
   console.log("New game created:", game);
   appendGame(game);
+});
+
+/**
+ * Handle game update (player joined/left)
+ * Refresh the game list to show updated player counts
+ */
+socket.on(EVENTS.GAME_UPDATE, (data: { gameId: number; playerCount: number }) => {
+  console.log("Game updated:", data);
+  // Update the specific game's player count or reload the full list
+  updateGamePlayerCount(data.gameId, data.playerCount);
 });
 
 /**
@@ -49,4 +59,3 @@ socket.on("connect", () => {
   console.log("Socket connected, loading games...");
   loadGames();
 });
-

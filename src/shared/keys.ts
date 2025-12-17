@@ -4,6 +4,7 @@ export const CHAT_LISTING = "chat:listing";
 
 export const GAME_LISTING = "games:listing";
 export const GAME_CREATE = "games:created";
+export const GAME_UPDATE = "games:updated"; // NEW: Broadcast when a game's player count changes
 
 export const JOIN_GAME_ROOM = "join-game-room";
 export const LEAVE_GAME_ROOM = "leave-game-room";

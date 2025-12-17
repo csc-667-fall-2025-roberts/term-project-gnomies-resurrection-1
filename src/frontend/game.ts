@@ -37,13 +37,22 @@ socket.on("connect", () => {
 
 /**
  * Handle player joined event
- * TODO: Replace reload with proper DOM update
+ * Request fresh game state to update player list without page reload
  */
-socket.on("player:joined", (data: any) => {
-    // TEMPORARY: Reload placeholder (professor's pattern)
-    // Replace with: updatePlayerSeats(data.players)
+socket.on("player-joined", (data: any) => {
     console.log("Player joined:", data);
-    window.location.reload();
+    // Request fresh state from server (like chat - no page reload!)
+    socket.emit("game:requestState", { gameId });
+});
+
+/**
+ * Handle player left event
+ * Request fresh game state to update player list without page reload
+ */
+socket.on("player-left", (data: any) => {
+    console.log("Player left:", data);
+    // Request fresh state from server (like chat - no page reload!)
+    socket.emit("game:requestState", { gameId });
 });
 
 /**
@@ -238,24 +247,24 @@ document.addEventListener("DOMContentLoaded", () => {
     const chatMessages = document.getElementById("game-chat-messages");
 
     if (chatInput) {
-      chatInput.addEventListener("keypress", (e) => {
-        if (e.key === "Enter" && chatInput.value.trim()) {
-          socket.emit("game-chat-message", {
-            gameId,
-            message: chatInput.value.trim(),
-          });
-          chatInput.value = "";
-        }
-      });
+        chatInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter" && chatInput.value.trim()) {
+                socket.emit("game-chat-message", {
+                    gameId,
+                    message: chatInput.value.trim(),
+                });
+                chatInput.value = "";
+            }
+        });
     }
 
     socket.on("game-chat-message", ({ username, message }: { username: string; message: string }) => {
-      if (chatMessages) {
-        const messageDiv = document.createElement("div");
-        messageDiv.className = "message";
-        messageDiv.textContent = `${username}: ${message}`;
-        chatMessages.appendChild(messageDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-      }
+        if (chatMessages) {
+            const messageDiv = document.createElement("div");
+            messageDiv.className = "message";
+            messageDiv.textContent = `${username}: ${message}`;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
     });
 });

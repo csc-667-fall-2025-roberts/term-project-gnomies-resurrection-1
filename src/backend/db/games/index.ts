@@ -9,18 +9,34 @@ import {
   GET_NEXT_PLAYER,
   GET_PLAYER_IDS,
   GET_PLAYER_POSITION,
+  GET_PLAYERS_WITH_STATS,
   JOIN_GAME,
+  LEAVE_GAME,
   LIST_GAMES,
   SET_CURRENT_TURN,
   SET_PLAYER_POSITION,
   START_GAME,
 } from "./sql";
 
+// Type for player data with stats (used on game page)
+export type PlayerWithStats = {
+  user_id: number;
+  username: string;
+  email: string;
+  position: number | null;
+  chip_count: number;
+  current_bet: number;
+  role: string; // 'dealer', 'small_blind', 'big_blind', 'player'
+};
+
 const create = async (user_id: number, name?: string, maxPlayers: number = 4) =>
   await db.one<Game>(CREATE_GAME, [user_id, name, maxPlayers]);
 
 const join = async (game_id: number, user_id: number) =>
   await db.none(JOIN_GAME, [game_id, user_id]);
+
+const leave = async (game_id: number, user_id: number) =>
+  await db.none(LEAVE_GAME, [game_id, user_id]);
 
 const list = async (state: GameState = GameState.LOBBY, limit: number = 50) =>
   await db.manyOrNone<Game>(LIST_GAMES, [state, limit]);
@@ -32,6 +48,11 @@ const get = async (game_id: number) => await db.one<Game>(GAME_BY_ID, [game_id])
 const getPlayerIds = async (gameId: number): Promise<number[]> => {
   const rows = await db.manyOrNone<{ user_id: number }>(GET_PLAYER_IDS, [gameId]);
   return rows.map((r) => r.user_id);
+};
+
+// Get players with stats for game page display
+const getPlayersWithStats = async (gameId: number): Promise<PlayerWithStats[]> => {
+  return await db.manyOrNone<PlayerWithStats>(GET_PLAYERS_WITH_STATS, [gameId]);
 };
 
 // Turn management methods
@@ -96,10 +117,11 @@ export {
   getCurrentTurn,
   getPlayerIds,
   getPlayerPosition,
+  getPlayersWithStats,
   join,
+  leave,
   list,
   setCurrentTurn,
   setPlayerPosition,
   start,
 };
-
