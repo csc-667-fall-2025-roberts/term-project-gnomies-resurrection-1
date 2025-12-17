@@ -12,7 +12,10 @@ import { requireUser } from "./middleware";
 import * as routes from "./routes";
 import { initSockets } from "./sockets/init";
 
-configDotenv();
+// Only load .env in development to prevent overriding production env vars
+if (process.env.NODE_ENV !== "production") {
+  configDotenv();
+}
 
 // Set up livereload in development
 const isDevelopment = process.env.NODE_ENV !== "production";

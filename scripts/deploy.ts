@@ -9,6 +9,12 @@ import * as fs from 'fs';
 import * as path from 'path';
 import pg from 'pg';
 
+// Only load .env in development to prevent overriding production env vars
+if (process.env.NODE_ENV !== 'production') {
+  const { configDotenv } = await import('dotenv');
+  configDotenv();
+}
+
 const isDev = process.env.NODE_ENV !== 'production';
 const databaseUrl = process.env.DATABASE_URL;
 const logFile = '/tmp/deploy.log';
