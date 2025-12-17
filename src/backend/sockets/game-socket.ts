@@ -4,9 +4,10 @@
  * Manages game-specific socket rooms and broadcasts.
  * Rooms group connections by game for isolated real-time communication.
  */
-import { Socket } from "socket.io";
+import { Server, Socket } from "socket.io";
 import * as Games from "../db/games";
 import logger from "../lib/logger";
+import { GAME_STARTED } from "../../shared/keys";
 
 /**
  * Generate room name for a game
@@ -27,7 +28,7 @@ export function gameRoom(gameId: number): string {
  */
 export async function initGameSocket(socket: Socket, gameId: number, userId: number): Promise<void> {
   const playerIds = await Games.getPlayerIds(gameId);
-  
+
   if (!playerIds.includes(userId)) {
     logger.warn(`User ${userId} tried to join game ${gameId} socket without being a player`);
     return;
@@ -35,10 +36,28 @@ export async function initGameSocket(socket: Socket, gameId: number, userId: num
 
   socket.join(gameRoom(gameId));
   logger.info(`User ${userId} joined game ${gameId} socket room`);
-  
+
   // Notify other players in the room
   socket.to(gameRoom(gameId)).emit("player-joined", {
     userId,
   });
 }
 
+/**
+ * Broadcast game started event to all players
+ * 
+ * @param io - Socket.io server instance
+ * @param gameId - The game that started
+ * @param firstPlayerId - The player who acts first
+ */
+export function broadcastGameStarted(
+  io: Server,
+  gameId: number,
+  firstPlayerId: number
+): void {
+  io.to(gameRoom(gameId)).emit(GAME_STARTED, {
+    firstPlayerId,
+    gameId,
+  });
+  logger.info(`Broadcast game:started for game ${gameId}, first player: ${firstPlayerId}`);
+}

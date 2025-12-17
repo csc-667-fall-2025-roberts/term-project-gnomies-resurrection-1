@@ -10,3 +10,6 @@ export const LEAVE_GAME_ROOM = "leave-game-room";
 export const GAME_CHAT_MESSAGE = "game-chat-message";
 export const PLAYER_JOINED = "player-joined";
 export const PLAYER_LEFT = "player-left";
+
+// Game state events
+export const GAME_STARTED = "game:started";

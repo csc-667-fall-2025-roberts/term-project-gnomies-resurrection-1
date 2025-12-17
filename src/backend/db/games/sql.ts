@@ -81,3 +81,12 @@ export const SET_PLAYER_POSITION = `
   SET position = $3
   WHERE game_id = $1 AND user_id = $2
 `;
+
+export const START_GAME = `
+  UPDATE games 
+  SET state = 'pre-flop', 
+      current_turn_user_id = $2,
+      started_at = CURRENT_TIMESTAMP
+  WHERE id = $1
+  RETURNING *
+`;

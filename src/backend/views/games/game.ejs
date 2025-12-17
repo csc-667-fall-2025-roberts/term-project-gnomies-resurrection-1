@@ -1,159 +1,179 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Game — Mockup</title>
-    <link rel="stylesheet" href="/css/bundle.css" />
-  </head>
-  <body class="page-game" data-game-id="<%= id %>">
 
-    <div class="bg"></div>
-    <div class="header">
-      <h1> <%= name %></h1>
-      <div class="header__identity">
-        <span class="user-info">Playing as: <strong><%= currentUserId %></strong></span>
-        <a href="/lobby" class="logout-btn">Return to Lobby</a>
-      </div>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Game — Mockup</title>
+  <link rel="stylesheet" href="/css/bundle.css" />
+</head>
+
+<body class="page-game" data-game-id="<%= id %>">
+
+  <div class="bg"></div>
+  <div class="header">
+    <h1>
+      <%= name %>
+    </h1>
+    <div class="header__identity">
+      <span class="user-info">Playing as: <strong>
+          <%= currentUserId %>
+        </strong></span>
+      <a href="/lobby" class="logout-btn">Return to Lobby</a>
     </div>
+  </div>
 
-    <div class="game-layout">
-      <div class="game-table-area">
-        <div class="table-wrapper">
-          <div class="poker-table">
-            <div class="pot">Pot: $12.75</div>
+  <div class="game-layout">
+    <div class="game-table-area">
+      <div class="table-wrapper">
+        <div class="poker-table">
+          <div class="pot">Pot: $12.75</div>
 
-            <div class="community-cards">
-              <div class="playing-card">A♠</div>
-              <div class="playing-card">8♦</div>
-              <div class="playing-card">Q♣</div>
+          <div class="community-cards">
+            <div class="playing-card">A♠</div>
+            <div class="playing-card">8♦</div>
+            <div class="playing-card">Q♣</div>
+          </div>
+
+          <div class="chips chips--south"><span class="stack">$45</span></div>
+          <div class="chips chips--west"><span class="stack">$35</span></div>
+          <div class="chips chips--north-east"><span class="stack">$5</span></div>
+
+          <!-- dynamic seats container -->
+          <div id="seats"></div>
+
+          <div class="player-controls">
+            <div class="player-hand-cards">
+              <div class="playing-card playing-card--small">A♠</div>
+              <div class="playing-card playing-card--small">4♥</div>
             </div>
-
-            <div class="chips chips--south"><span class="stack">$45</span></div>
-            <div class="chips chips--west"><span class="stack">$35</span></div>
-            <div class="chips chips--north-east"><span class="stack">$5</span></div>
-
-            <!-- dynamic seats container -->
-            <div id="seats"></div>
-
-            <div class="player-controls">
-              <div class="player-hand-cards">
-                <div class="playing-card playing-card--small">A♠</div>
-                <div class="playing-card playing-card--small">4♥</div>
-              </div>
-              <button class="action-btn">Fold</button>
-              <button class="action-btn action-btn--call">Call</button>
-              <div class="action-group">
-                <button class="action-btn action-btn--raise">Raise</button>
-                <input class="raise-input" type="number" min="1" value="5" aria-label="raise amount" />
-              </div>
+            <button class="action-btn">Fold</button>
+            <button class="action-btn action-btn--call">Call</button>
+            <div class="action-group">
+              <button class="action-btn action-btn--raise">Raise</button>
+              <input class="raise-input" type="number" min="1" value="5" aria-label="raise amount" />
             </div>
           </div>
-        </div>
-      </div>
-
-      <div class="game-sidebar">
-        <div class="game-meta">
-          <div class="meta-title">Game</div>
-          <!--<div><strong>ID:</strong> <%= id %></div>-->
-          <div><strong>Name:</strong> <%= name %></div>
-          <div><strong>Host:</strong> <%= created_by %></div>
-
-          <!-- players demo control (dropdown) -->
-          <div class="meta-row">
-            <label class="meta-label" for="playerCountSelect">Players:</label>
-            <!-- populate options client-side to avoid literal EJS output in the browser -->
-            <select id="playerCountSelect" aria-label="number of players"></select>
-            <small class="meta-hint">demo only</small>
-          </div>
-
-          <div class="meta-return"><a href="/lobby">Return to lobby</a></div>
-        </div>
-
-        <div class="game-chat">
-          <div class="game-chat__title">Chat</div>
-          <div class="messages">
-            <div class="message">Player 1: Hurry up already</div>
-            <div class="message">Player 2: i think they're afk</div>
-            <div class="message typing">Player 4 is typing...</div>
-          </div>
-          <input placeholder="Say something..." />
         </div>
       </div>
     </div>
 
-    <script>
-      // populate the player count dropdown client-side
-      (function populatePlayerSelect() {
-        const sel = document.getElementById('playerCountSelect');
-        const maxPlayers = parseInt('<%= maxPlayers %>', 10); // Ensure maxPlayers is parsed as an integer
-        const defaultCount = Math.min(maxPlayers, 7); // Default to 7 or maxPlayers, whichever is smaller
+    <div class="game-sidebar">
+      <div class="game-meta">
+        <div class="meta-title">Game</div>
+        <!--<div><strong>ID:</strong> <%= id %></div>-->
+        <div><strong>Name:</strong>
+          <%= name %>
+        </div>
+        <div><strong>Host:</strong>
+          <%= created_by %>
+        </div>
 
-        for (let i = 2; i <= maxPlayers; i++) {
-          const opt = document.createElement('option');
-          opt.value = i;
-          opt.textContent = i;
-          if (i === defaultCount) opt.selected = true;
-          sel.appendChild(opt);
-        }
-      })();
+        <!-- players demo control (dropdown) -->
+        <div class="meta-row">
+          <label class="meta-label" for="playerCountSelect">Players:</label>
+          <!-- populate options client-side to avoid literal EJS output in the browser -->
+          <select id="playerCountSelect" aria-label="number of players"></select>
+          <small class="meta-hint">demo only</small>
+        </div>
 
-      // dynamic seat rendering (client-only demo)
-      (function () {
-        const seatsContainer = document.getElementById('seats');
-        const select = document.getElementById('playerCountSelect');
+        <% if (currentUserId===created_by && state==='lobby' ) { %>
+          <form method="post" action="/games/<%= id %>/start" class="start-game-form">
+            <button type="submit" class="btn-start-game">
+              🎮 Start Game
+            </button>
+            <small class="start-hint">(Need at least 2 players)</small>
+          </form>
+          <% } %>
 
-        // Preset positions for 2 to 8 players
-        const POSITION_PRESETS = {
-          2: ['seat-pos-1', 'seat-pos-5'],
-          3: ['seat-pos-1', 'seat-pos-3', 'seat-pos-5'],
-          4: ['seat-pos-1', 'seat-pos-3', 'seat-pos-5', 'seat-pos-7'],
-          5: ['seat-pos-1', 'seat-pos-2', 'seat-pos-4', 'seat-pos-6', 'seat-pos-8'],
-          6: ['seat-pos-1', 'seat-pos-2', 'seat-pos-3', 'seat-pos-5', 'seat-pos-6', 'seat-pos-8'],
-          7: ['seat-pos-1', 'seat-pos-2', 'seat-pos-3', 'seat-pos-4', 'seat-pos-6', 'seat-pos-7', 'seat-pos-8'],
-          8: ['seat-pos-1', 'seat-pos-2', 'seat-pos-3', 'seat-pos-4', 'seat-pos-5', 'seat-pos-6', 'seat-pos-7', 'seat-pos-8'],
-        };
+            <div class="meta-return"><a href="/lobby">Return to lobby</a></div>
+      </div>
 
-        function buildSeatLabel(playerNumber) {
-          const label = document.createElement('div');
-          label.className = 'player-seat__label';
+      <div class="game-chat">
+        <div class="game-chat__title">Chat</div>
+        <div class="messages">
+          <div class="message">Player 1: Hurry up already</div>
+          <div class="message">Player 2: i think they're afk</div>
+          <div class="message typing">Player 4 is typing...</div>
+        </div>
+        <input placeholder="Say something..." />
+      </div>
+    </div>
+  </div>
 
-          const playerName = document.createElement('strong');
-          playerName.textContent = 'P' + playerNumber;
+  <script>
+    // populate the player count dropdown client-side
+    (function populatePlayerSelect() {
+      const sel = document.getElementById('playerCountSelect');
+      const maxPlayers = parseInt('<%= maxPlayers %>', 10); // Ensure maxPlayers is parsed as an integer
+      const defaultCount = Math.min(maxPlayers, 7); // Default to 7 or maxPlayers, whichever is smaller
 
-          const stack = document.createElement('div');
-          stack.className = 'player-seat__stack';
-          stack.textContent = '$' + (10 * playerNumber);
+      for (let i = 2; i <= maxPlayers; i++) {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = i;
+        if (i === defaultCount) opt.selected = true;
+        sel.appendChild(opt);
+      }
+    })();
 
-          label.appendChild(playerName);
-          label.appendChild(stack);
+    // dynamic seat rendering (client-only demo)
+    (function () {
+      const seatsContainer = document.getElementById('seats');
+      const select = document.getElementById('playerCountSelect');
 
-          return label;
-        }
+      // Preset positions for 2 to 8 players
+      const POSITION_PRESETS = {
+        2: ['seat-pos-1', 'seat-pos-5'],
+        3: ['seat-pos-1', 'seat-pos-3', 'seat-pos-5'],
+        4: ['seat-pos-1', 'seat-pos-3', 'seat-pos-5', 'seat-pos-7'],
+        5: ['seat-pos-1', 'seat-pos-2', 'seat-pos-4', 'seat-pos-6', 'seat-pos-8'],
+        6: ['seat-pos-1', 'seat-pos-2', 'seat-pos-3', 'seat-pos-5', 'seat-pos-6', 'seat-pos-8'],
+        7: ['seat-pos-1', 'seat-pos-2', 'seat-pos-3', 'seat-pos-4', 'seat-pos-6', 'seat-pos-7', 'seat-pos-8'],
+        8: ['seat-pos-1', 'seat-pos-2', 'seat-pos-3', 'seat-pos-4', 'seat-pos-5', 'seat-pos-6', 'seat-pos-7', 'seat-pos-8'],
+      };
 
-        function renderSeats(count) {
-          seatsContainer.innerHTML = ''; // clear
-          const positions = POSITION_PRESETS[count] || POSITION_PRESETS[8]; // Fallback to 8 positions if count is invalid
+      function buildSeatLabel(playerNumber) {
+        const label = document.createElement('div');
+        label.className = 'player-seat__label';
 
-          // Create seats based on the preset positions
-          positions.forEach((posClass, index) => {
-            const seat = document.createElement('div');
-            seat.className = 'player-seat ' + posClass;
-            seat.appendChild(buildSeatLabel(index + 1));
-            seatsContainer.appendChild(seat);
-          });
-        }
+        const playerName = document.createElement('strong');
+        playerName.textContent = 'P' + playerNumber;
 
-        // Initialize with selected value from the newly-populated select
-        renderSeats(Math.max(2, Number(select.value || 7)));
+        const stack = document.createElement('div');
+        stack.className = 'player-seat__stack';
+        stack.textContent = '$' + (10 * playerNumber);
 
-        // On change, re-render seats
-        select.addEventListener('change', function (e) {
-          const v = Math.max(2, Number(e.target.value) || 2);
-          renderSeats(v);
+        label.appendChild(playerName);
+        label.appendChild(stack);
+
+        return label;
+      }
+
+      function renderSeats(count) {
+        seatsContainer.innerHTML = ''; // clear
+        const positions = POSITION_PRESETS[count] || POSITION_PRESETS[8]; // Fallback to 8 positions if count is invalid
+
+        // Create seats based on the preset positions
+        positions.forEach((posClass, index) => {
+          const seat = document.createElement('div');
+          seat.className = 'player-seat ' + posClass;
+          seat.appendChild(buildSeatLabel(index + 1));
+          seatsContainer.appendChild(seat);
         });
-      })();
-    </script>
-    <script src="/js/game.js" type="module"></script>
-  </body>
+      }
+
+      // Initialize with selected value from the newly-populated select
+      renderSeats(Math.max(2, Number(select.value || 7)));
+
+      // On change, re-render seats
+      select.addEventListener('change', function (e) {
+        const v = Math.max(2, Number(e.target.value) || 2);
+        renderSeats(v);
+      });
+    })();
+  </script>
+  <script src="/js/game.js" type="module"></script>
+</body>
+
 </html>

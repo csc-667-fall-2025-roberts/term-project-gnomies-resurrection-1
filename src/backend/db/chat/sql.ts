@@ -1,6 +1,6 @@
 export const CREATE_MESSAGE = `
 WITH new_message AS (
-  INSERT INTO chat_messages (user_id, message)
+  INSERT INTO chat_messages (user_id, message_text)
   VALUES ($1, $2)
   RETURNING *
 )

@@ -13,6 +13,7 @@ import {
   LIST_GAMES,
   SET_CURRENT_TURN,
   SET_PLAYER_POSITION,
+  START_GAME,
 } from "./sql";
 
 const create = async (user_id: number, name?: string, maxPlayers: number = 4) =>
@@ -83,6 +84,10 @@ const advanceTurn = async (gameId: number): Promise<number> => {
   return nextPlayer.user_id;
 };
 
+// Start game method
+const start = async (gameId: number, firstPlayerId: number) =>
+  await db.one<Game>(START_GAME, [gameId, firstPlayerId]);
+
 export {
   advanceTurn,
   create,
@@ -95,4 +100,6 @@ export {
   list,
   setCurrentTurn,
   setPlayerPosition,
+  start,
 };
+

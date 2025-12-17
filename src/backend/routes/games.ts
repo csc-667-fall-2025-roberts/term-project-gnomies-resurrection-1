@@ -5,6 +5,8 @@ import { GAME_CREATE, GAME_LISTING, GLOBAL_ROOM } from "../../shared/keys";
 import { Games } from "../db";
 import { generateGameName } from "../lib/game-names";
 import logger from "../lib/logger";
+import { startGame } from "../services/game-service";
+import { broadcastGameStarted } from "../sockets/game-socket";
 
 const router = express.Router();
 
@@ -68,4 +70,43 @@ router.post("/:game_id/join", async (request, response) => {
   response.redirect(`/games/${game_id}`);
 });
 
+/**
+ * Start a game
+ * Only game owner can start, requires at least 2 players
+ */
+router.post("/:id/start", async (request, response) => {
+  const gameId = parseInt(request.params.id);
+  const userId = request.session.user!.id;
+
+  try {
+    // Verify user is game owner
+    const game = await Games.get(gameId);
+    if (game.created_by !== userId) {
+      logger.warn(`User ${userId} tried to start game ${gameId} without being owner`);
+      response.status(403).redirect(`/games/${gameId}`);
+      return;
+    }
+
+    // Verify game is in lobby state
+    if (game.state !== "lobby") {
+      logger.warn(`Attempted to start game ${gameId} that is not in lobby state`);
+      response.redirect(`/games/${gameId}`);
+      return;
+    }
+
+    // Start the game via service layer
+    const { firstPlayerId } = await startGame(gameId);
+
+    // Broadcast to all players in the game room
+    const io = request.app.get("io") as Server;
+    broadcastGameStarted(io, gameId, firstPlayerId);
+
+    response.redirect(`/games/${gameId}`);
+  } catch (error: any) {
+    logger.error(`Error starting game ${gameId}:`, error);
+    response.redirect(`/games/${gameId}`);
+  }
+});
+
 export default router;
+
