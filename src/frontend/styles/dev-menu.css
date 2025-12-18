@@ -1,0 +1,298 @@
+/* ==================== DEV MENU ==================== */
+/* ⚠️ DEV ONLY - Remove before production */
+/* Pattern: professor_sample_code/frontend/styles/dev-menu.css */
+
+.dev-menu {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 280px;
+    background: #1e293b;
+    color: #e2e8f0;
+    border-radius: 8px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    font-family: "Monaco", "Menlo", monospace;
+    font-size: 12px;
+    z-index: 9999;
+    transition: all 0.3s ease;
+}
+
+.dev-menu.collapsed .dev-menu-content {
+    display: none;
+}
+
+.dev-menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: #0f172a;
+    border-radius: 8px 8px 0 0;
+    cursor: pointer;
+    user-select: none;
+}
+
+.dev-menu-header span {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.dev-menu-toggle {
+    background: transparent;
+    border: none;
+    color: #e2e8f0;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 4px 8px;
+    transition: transform 0.2s;
+}
+
+.dev-menu-toggle:hover {
+    transform: scale(1.1);
+}
+
+.dev-menu-content {
+    padding: 12px;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.dev-menu-section {
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #334155;
+}
+
+.dev-menu-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.dev-menu-section h4 {
+    margin: 0 0 8px 0;
+    font-size: 11px;
+    text-transform: uppercase;
+    color: #94a3b8;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.dev-menu-section button {
+    display: block;
+    width: 100%;
+    margin-bottom: 6px;
+    padding: 8px 12px;
+    background: #334155;
+    border: 1px solid #475569;
+    border-radius: 4px;
+    color: #e2e8f0;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+}
+
+.dev-menu-section button:hover {
+    background: #475569;
+    border-color: #64748b;
+    transform: translateY(-1px);
+}
+
+.dev-menu-section button:active {
+    transform: translateY(0);
+}
+
+.dev-menu-help {
+    font-size: 11px;
+    line-height: 1.6;
+    color: #cbd5e1;
+}
+
+.dev-menu-help kbd {
+    display: inline-block;
+    padding: 2px 6px;
+    background: #0f172a;
+    border: 1px solid #475569;
+    border-radius: 3px;
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 600;
+    margin-right: 4px;
+    color: #fbbf24;
+}
+
+/* Custom scrollbar */
+.dev-menu-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.dev-menu-content::-webkit-scrollbar-track {
+    background: #1e293b;
+}
+
+.dev-menu-content::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 3px;
+}
+
+.dev-menu-content::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+/* Pulse animation for dev menu to make it noticeable */
+@keyframes dev-pulse {
+
+    0%,
+    100% {
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    50% {
+        box-shadow: 0 10px 40px rgba(251, 191, 36, 0.3);
+    }
+}
+
+.dev-menu.collapsed {
+    animation: dev-pulse 3s ease-in-out infinite;
+}
+
+/* ==================== CONFETTI ==================== */
+
+@keyframes confetti-fall {
+    0% {
+        transform: translateY(-100vh) rotate(0deg);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(100vh) rotate(720deg);
+        opacity: 0;
+    }
+}
+
+.confetti {
+    position: fixed;
+    top: 0;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    pointer-events: none;
+    z-index: 10001;
+    animation: confetti-fall 3s ease-out forwards;
+}
+
+/* ==================== POKER-SPECIFIC DEV STATES ==================== */
+
+/* Folded player styling */
+.player-seat.folded {
+    opacity: 0.5;
+    filter: grayscale(80%);
+}
+
+.player-seat.folded::after {
+    content: "FOLDED";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-15deg);
+    background: #dc2626;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: bold;
+    border-radius: 4px;
+    text-transform: uppercase;
+}
+
+/* Winner highlight */
+.player-seat.winner {
+    animation: winner-glow 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes winner-glow {
+    from {
+        box-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
+    }
+
+    to {
+        box-shadow: 0 0 40px rgba(251, 191, 36, 0.8), 0 0 60px rgba(251, 191, 36, 0.4);
+    }
+}
+
+/* Pot update flash */
+.pot-updated {
+    animation: pot-flash 0.5s ease;
+}
+
+@keyframes pot-flash {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+        color: #22c55e;
+    }
+}
+
+/* Card dealing animation */
+@keyframes dealCard {
+    from {
+        transform: translateY(-100px) rotate(-10deg);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0) rotate(0);
+        opacity: 1;
+    }
+}
+
+.playing-card.dealing {
+    animation: dealCard 0.3s ease backwards;
+}
+
+/* Card back styling (when flipped) */
+.playing-card.back {
+    background: linear-gradient(135deg,
+            #dc2626 0%,
+            #991b1b 40%,
+            #dc2626 60%,
+            #991b1b 100%) !important;
+    background-size: 200% 200% !important;
+    animation: shimmer 8s ease-in-out infinite;
+}
+
+.playing-card.back::before,
+.playing-card.back::after {
+    display: none !important;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* Winner announcement fade in */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}

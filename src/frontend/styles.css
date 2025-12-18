@@ -3,6 +3,8 @@
 @import "./styles/animations.css";
 @import "./styles/cards.css";
 @import "./styles/game.css";
+@import "./styles/dev-menu.css";
+/* ⚠️ DEV ONLY - Remove before production */
 
 /* ==================== GLOBAL RESET ==================== */
 * {
@@ -76,6 +78,7 @@ a:hover {
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

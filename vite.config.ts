@@ -19,6 +19,7 @@ export default defineConfig(({ command, mode }) => {
           chat: path.resolve(__dirname, "src/frontend/chat.ts"),
           lobby: path.resolve(__dirname, "src/frontend/lobby.ts"),
           game: path.resolve(__dirname, "src/frontend/game.ts"),
+          "dev-menu": path.resolve(__dirname, "src/frontend/dev-menu.ts"), // ⚠️ DEV ONLY
         },
         output: {
           // Output as ES modules (requires type="module" in script tags)
