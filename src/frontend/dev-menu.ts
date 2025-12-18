@@ -68,6 +68,8 @@ function createDevMenu() {
         <button data-action="set-pot-medium">Pot: $250</button>
         <button data-action="set-pot-large">Pot: $1000</button>
         <button data-action="random-bet">Random Player Bet</button>
+        <button data-action="fly-chip">Chip Animation 🪙</button>
+        <button data-action="show-call-amount">Show Call $50</button>
       </div>
 
       <div class="dev-menu-section">
@@ -291,6 +293,14 @@ function handleAction(action: string) {
 
         case "random-bet":
             randomPlayerBet();
+            break;
+
+        case "fly-chip":
+            flyChipToPot();
+            break;
+
+        case "show-call-amount":
+            toggleCallAmount(50);
             break;
 
         // Player actions
@@ -661,4 +671,71 @@ function stopMockTimer(): void {
     }
 
     console.log("[DEV] Timer stopped");
+}
+
+// ==================== BETTING UI HELPER FUNCTIONS ====================
+
+/**
+ * Animate a chip flying to the pot
+ */
+function flyChipToPot(): void {
+    const playerControls = document.querySelector(".player-controls");
+    const potDisplay = document.getElementById("pot-display");
+
+    if (playerControls === null || potDisplay === null) {
+        console.log("[DEV] Cannot find controls or pot");
+        return;
+    }
+
+    // Create chip element
+    const chip = document.createElement("div");
+    chip.className = "chip-flying";
+
+    // Position at player controls
+    const controlsRect = playerControls.getBoundingClientRect();
+    chip.style.left = `${controlsRect.left + controlsRect.width / 2 - 20}px`;
+    chip.style.top = `${controlsRect.top}px`;
+    chip.style.position = "fixed";
+
+    document.body.appendChild(chip);
+
+    // Remove after animation
+    setTimeout(() => {
+        chip.remove();
+        // Flash pot update
+        potDisplay.classList.add("pot-updated");
+        setTimeout(() => potDisplay.classList.remove("pot-updated"), 500);
+    }, 600);
+
+    console.log("[DEV] Chip animation triggered");
+}
+
+/**
+ * Toggle call amount badge on call button
+ */
+function toggleCallAmount(amount: number): void {
+    const callBtn = document.querySelector(".btn-call, .action-btn--call");
+
+    if (callBtn === null) {
+        console.log("[DEV] Cannot find call button");
+        return;
+    }
+
+    // Check if badge exists
+    let badge = callBtn.querySelector(".call-amount");
+
+    if (badge !== null) {
+        // Remove badge
+        badge.remove();
+        callBtn.textContent = "Call";
+        console.log("[DEV] Call amount badge removed");
+    } else {
+        // Add badge
+        badge = document.createElement("span");
+        badge.className = "call-amount";
+        badge.textContent = `$${amount}`;
+        callBtn.textContent = "Call";
+        callBtn.appendChild(badge);
+        console.log(`[DEV] Call amount badge added: $${amount}`);
+    }
 }
