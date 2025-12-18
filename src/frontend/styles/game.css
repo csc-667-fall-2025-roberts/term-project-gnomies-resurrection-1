@@ -221,14 +221,13 @@ body.page-game {
 }
 
 .seat-pos-1 {
-  top: -36px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: -40px;
+  left: 45%;
 }
 
 .seat-pos-2 {
-  top: 50px;
-  right: 34px;
+  top: 20px;
+  right: 76px;
 }
 
 .seat-pos-3 {
@@ -237,19 +236,18 @@ body.page-game {
 }
 
 .seat-pos-4 {
-  bottom: 72px;
-  right: 26px;
+  bottom: 20px;
+  right: 76px;
 }
 
 .seat-pos-5 {
   bottom: -36px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 45%;
 }
 
 .seat-pos-6 {
-  bottom: 72px;
-  left: 26px;
+  bottom: 20px;
+  left: 76px;
 }
 
 .seat-pos-7 {
@@ -258,8 +256,8 @@ body.page-game {
 }
 
 .seat-pos-8 {
-  top: 50px;
-  left: 34px;
+  top: 20px;
+  left: 76px;
 }
 
 /* ==================== CHIPS & INDICATORS ==================== */

@@ -29,34 +29,46 @@
             <!-- Community cards will be rendered dynamically -->
           </div>
 
+          <% 
+          // Define seat presets for 2-8 players
+          var seatPresets = {
+            2: ['seat-pos-1', 'seat-pos-5'],
+            3: ['seat-pos-1', 'seat-pos-4', 'seat-pos-6'],
+            4: ['seat-pos-1', 'seat-pos-3', 'seat-pos-5', 'seat-pos-7'],
+            5: ['seat-pos-1', 'seat-pos-2', 'seat-pos-4', 'seat-pos-6', 'seat-pos-8'],
+            6: ['seat-pos-1', 'seat-pos-3', 'seat-pos-5', 'seat-pos-7', 'seat-pos-6', 'seat-pos-4'],
+            7: ['seat-pos-1', 'seat-pos-3', 'seat-pos-5', 'seat-pos-7', 'seat-pos-2', 'seat-pos-4', 'seat-pos-6'],
+            8: ['seat-pos-1', 'seat-pos-3', 'seat-pos-5', 'seat-pos-7', 'seat-pos-2', 'seat-pos-4', 'seat-pos-6', 'seat-pos-8']
+          };
+
+          // Get the seat classes for the current number of players
+          var seatClasses = seatPresets[maxPlayers] || []; 
+          %>
+
           <!-- Real player seats from database -->
           <div id="seats" class="player-seats">
-            <% var seatClasses=['seat-pos-1', 'seat-pos-3' , 'seat-pos-5' , 'seat-pos-7' , 'seat-pos-2' , 'seat-pos-4'
-              , 'seat-pos-6' , 'seat-pos-8' ]; %>
-              <% for (var pi=0; pi < players.length; pi++) { %>
-                <% var player=players[pi]; %>
-                  <% var playerPos=player.position || (pi + 1); %>
-                    <% var posClass=seatClasses[playerPos - 1] || 'seat-pos-' + (pi + 1); %>
-                      <% var isMyTurn=player.user_id===current_turn_user_id; %>
-                        <div class="player-seat <%- posClass %><% if (isMyTurn) { %> active-turn<% } %>"
-                          data-user-id="<%- player.user_id %>">
-                          <div class="player-seat__label">
-                            <strong><%- player.username %></strong>
-                            <div class="player-seat__stack">$<%- player.chip_count %></div>
-                            <% if (player.current_bet> 0) { %>
-                              <div class="current-bet">Bet: $<%- player.current_bet %></div>
-                              <% } %>
-                          </div>
-                        </div>
-                        <% } %>
+            <% for (var pi = 0; pi < players.length; pi++) { %>
+              <% var player = players[pi]; %>
+              <% var playerPos = player.position || (pi + 1); %>
+              <% var posClass = seatClasses[playerPos - 1] || 'seat-pos-' + (pi + 1); %>
+              <% var isMyTurn = player.user_id === current_turn_user_id; %>
+              <div class="player-seat <%- posClass %><% if (isMyTurn) { %> active-turn<% } %>" data-user-id="<%- player.user_id %>">
+                <div class="player-seat__label">
+                  <strong><%- player.username %></strong>
+                  <div class="player-seat__stack">$<%- player.chip_count %></div>
+                  <% if (player.current_bet > 0) { %>
+                    <div class="current-bet">Bet: $<%- player.current_bet %></div>
+                  <% } %>
+                </div>
+              </div>
+            <% } %>
 
-                          <!-- Empty seats for remaining positions -->
-                          <% for (var ei=players.length; ei < maxPlayers; ei++) { %>
-                            <% var emptyPosClass=seatClasses[ei] || 'seat-pos-' + (ei + 1); %>
-                              <div class="player-seat <%- emptyPosClass %> player-seat--empty">
-                                <div class="player-seat__label">Empty</div>
-                              </div>
-                              <% } %>
+            <% for (var ei = players.length; ei < maxPlayers; ei++) { %>
+              <% var emptyPosClass = seatClasses[ei] || 'seat-pos-' + (ei + 1); %>
+              <div class="player-seat <%- emptyPosClass %> player-seat--empty">
+                <div class="player-seat__label">Empty</div>
+              </div>
+            <% } %>
           </div>
 
           <div class="player-controls">
