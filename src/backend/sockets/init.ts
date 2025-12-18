@@ -140,43 +140,9 @@ export const initSockets = (httpServer: HTTPServer) => {
       }
     });
 
-    // Handle socket disconnect - notify game rooms and remove from database
-    socket.on("disconnect", async () => {
+    // Handle socket disconnect - notify game rooms
+    socket.on("disconnect", () => {
       logger.info(`socket for user ${session.user!.username} disconnected`);
-
-      // If user was in a game room (from query params), handle leaving
-      if (gameId) {
-        const parsedGameId = parseInt(gameId);
-        const roomName = gameRoom(parsedGameId);
-
-        try {
-          // Check if game is in lobby state - if so, remove player from database
-          const game = await Games.get(parsedGameId);
-          if (game.state === "lobby") {
-            // Remove player from database
-            await Games.leave(parsedGameId, session.user!.id);
-            logger.info(`Removed user ${session.user!.username} from game ${parsedGameId} (lobby state)`);
-
-            // Get updated player count for lobby broadcast
-            const playerIds = await Games.getPlayerIds(parsedGameId);
-
-            // Broadcast to lobby that player count changed
-            io.to(GLOBAL_ROOM).emit("games:updated", {
-              gameId: parsedGameId,
-              playerCount: playerIds.length
-            });
-          }
-        } catch (error) {
-          logger.error(`Error handling disconnect for user ${session.user!.id} from game ${parsedGameId}:`, error);
-        }
-
-        // Notify other players in the game room
-        io.to(roomName).emit("player-left", {
-          username: session.user!.username,
-          userId: session.user!.id,
-        });
-        logger.info(`Broadcast player-left to room ${roomName} for user ${session.user!.username}`);
-      }
     });
   });
 
