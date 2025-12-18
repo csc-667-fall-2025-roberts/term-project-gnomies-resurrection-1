@@ -317,15 +317,24 @@ export function startTurnTimer(onTimeout: () => void): void {
     let remaining = TURN_TIMEOUT_MS;
     const timerEl = document.getElementById("turn-timer");
     const timerFill = document.getElementById("turn-timer-fill");
+    const playerControls = document.querySelector(".player-controls");
 
-    // Show timer element if exists
+    // Show timer element and add "your turn" indicator
     if (timerEl !== null) {
         timerEl.classList.add("turn-timer--active");
+        timerEl.classList.remove("turn-timer--warning", "turn-timer--danger");
         timerEl.textContent = `${Math.ceil(remaining / 1000)}s`;
     }
 
     if (timerFill !== null) {
         timerFill.style.width = "100%";
+        timerFill.classList.remove("turn-timer-fill--warning", "turn-timer-fill--danger");
+    }
+
+    // Add "your turn" indicator to controls
+    if (playerControls !== null) {
+        playerControls.classList.add("your-turn");
+        playerControls.classList.remove("disabled");
     }
 
     turnTimer = setInterval(() => {
@@ -334,6 +343,14 @@ export function startTurnTimer(onTimeout: () => void): void {
         // Update timer display
         if (timerEl !== null) {
             timerEl.textContent = `${Math.ceil(remaining / 1000)}s`;
+
+            // Update timer circle color based on time remaining
+            if (remaining <= 5000) {
+                timerEl.classList.remove("turn-timer--warning");
+                timerEl.classList.add("turn-timer--danger");
+            } else if (remaining <= 10000) {
+                timerEl.classList.add("turn-timer--warning");
+            }
         }
 
         // Update timer bar visual
@@ -346,6 +363,7 @@ export function startTurnTimer(onTimeout: () => void): void {
                 timerFill.classList.add("turn-timer-fill--warning");
             }
             if (remaining <= 5000) {
+                timerFill.classList.remove("turn-timer-fill--warning");
                 timerFill.classList.add("turn-timer-fill--danger");
             }
         }
@@ -367,16 +385,22 @@ export function clearTurnTimer(): void {
         turnTimer = null;
     }
 
-    // Hide timer display
+    // Hide timer display and reset classes
     const timerEl = document.getElementById("turn-timer");
     const timerFill = document.getElementById("turn-timer-fill");
+    const playerControls = document.querySelector(".player-controls");
 
     if (timerEl !== null) {
-        timerEl.classList.remove("turn-timer--active");
+        timerEl.classList.remove("turn-timer--active", "turn-timer--warning", "turn-timer--danger");
     }
 
     if (timerFill !== null) {
         timerFill.style.width = "0%";
         timerFill.classList.remove("turn-timer-fill--warning", "turn-timer-fill--danger");
+    }
+
+    // Remove "your turn" indicator from controls
+    if (playerControls !== null) {
+        playerControls.classList.remove("your-turn");
     }
 }

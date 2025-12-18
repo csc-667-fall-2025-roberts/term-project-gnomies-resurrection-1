@@ -78,6 +78,14 @@ function createDevMenu() {
       </div>
 
       <div class="dev-menu-section">
+        <h4>Turn Timer</h4>
+        <button data-action="start-timer">Start Timer (30s)</button>
+        <button data-action="stop-timer">Stop Timer</button>
+        <button data-action="timer-warning">Set Warning (10s)</button>
+        <button data-action="timer-danger">Set Danger (5s)</button>
+      </div>
+
+      <div class="dev-menu-section">
         <h4>Celebrations</h4>
         <button data-action="winner">Show Winner 🎉</button>
         <button data-action="confetti">Confetti Burst 🎊</button>
@@ -304,6 +312,23 @@ function handleAction(action: string) {
             document.querySelector(".player-controls")?.classList.add("disabled");
             break;
 
+        // Turn Timer
+        case "start-timer":
+            startMockTimer(30);
+            break;
+
+        case "stop-timer":
+            stopMockTimer();
+            break;
+
+        case "timer-warning":
+            startMockTimer(10);
+            break;
+
+        case "timer-danger":
+            startMockTimer(5);
+            break;
+
         // Celebrations
         case "winner":
             showWinner();
@@ -521,4 +546,119 @@ function createConfetti() {
 
     confettiCount++;
     console.log(`[DEV] Confetti burst #${confettiCount}! 🎉`);
+}
+
+// ==================== MOCK TIMER FUNCTIONS ====================
+
+let mockTimerInterval: ReturnType<typeof setInterval> | null = null;
+
+/**
+ * Start a mock timer for testing UI
+ * @param startSeconds - Number of seconds to start from
+ */
+function startMockTimer(startSeconds: number): void {
+    stopMockTimer(); // Clear any existing timer
+
+    let remaining = startSeconds;
+    const timerEl = document.getElementById("turn-timer");
+    const timerFill = document.getElementById("turn-timer-fill");
+    const playerControls = document.querySelector(".player-controls");
+
+    // Initialize timer display
+    if (timerEl !== null) {
+        timerEl.classList.add("turn-timer--active");
+        timerEl.classList.remove("turn-timer--warning", "turn-timer--danger");
+        timerEl.textContent = `${remaining}s`;
+
+        // Set initial state based on starting time
+        if (remaining <= 5) {
+            timerEl.classList.add("turn-timer--danger");
+        } else if (remaining <= 10) {
+            timerEl.classList.add("turn-timer--warning");
+        }
+    }
+
+    if (timerFill !== null) {
+        const percentage = (remaining / 30) * 100; // Assume 30s total
+        timerFill.style.width = `${percentage}%`;
+        timerFill.classList.remove("turn-timer-fill--warning", "turn-timer-fill--danger");
+
+        if (remaining <= 5) {
+            timerFill.classList.add("turn-timer-fill--danger");
+        } else if (remaining <= 10) {
+            timerFill.classList.add("turn-timer-fill--warning");
+        }
+    }
+
+    // Add your-turn indicator
+    if (playerControls !== null) {
+        playerControls.classList.add("your-turn");
+        playerControls.classList.remove("disabled");
+    }
+
+    // Start countdown
+    mockTimerInterval = setInterval(() => {
+        remaining -= 1;
+
+        if (timerEl !== null) {
+            timerEl.textContent = `${remaining}s`;
+
+            // Update warning/danger states
+            if (remaining <= 5) {
+                timerEl.classList.remove("turn-timer--warning");
+                timerEl.classList.add("turn-timer--danger");
+            } else if (remaining <= 10) {
+                timerEl.classList.add("turn-timer--warning");
+            }
+        }
+
+        if (timerFill !== null) {
+            const percentage = (remaining / 30) * 100;
+            timerFill.style.width = `${Math.max(0, percentage)}%`;
+
+            if (remaining <= 5) {
+                timerFill.classList.remove("turn-timer-fill--warning");
+                timerFill.classList.add("turn-timer-fill--danger");
+            } else if (remaining <= 10) {
+                timerFill.classList.add("turn-timer-fill--warning");
+            }
+        }
+
+        if (remaining <= 0) {
+            stopMockTimer();
+            console.log("[DEV] Timer expired - auto-fold would trigger");
+        }
+    }, 1000);
+
+    console.log(`[DEV] Timer started from ${startSeconds}s`);
+}
+
+/**
+ * Stop the mock timer
+ */
+function stopMockTimer(): void {
+    if (mockTimerInterval !== null) {
+        clearInterval(mockTimerInterval);
+        mockTimerInterval = null;
+    }
+
+    const timerEl = document.getElementById("turn-timer");
+    const timerFill = document.getElementById("turn-timer-fill");
+    const playerControls = document.querySelector(".player-controls");
+
+    if (timerEl !== null) {
+        timerEl.classList.remove("turn-timer--active", "turn-timer--warning", "turn-timer--danger");
+        timerEl.textContent = "30s";
+    }
+
+    if (timerFill !== null) {
+        timerFill.style.width = "0%";
+        timerFill.classList.remove("turn-timer-fill--warning", "turn-timer-fill--danger");
+    }
+
+    if (playerControls !== null) {
+        playerControls.classList.remove("your-turn");
+    }
+
+    console.log("[DEV] Timer stopped");
 }
