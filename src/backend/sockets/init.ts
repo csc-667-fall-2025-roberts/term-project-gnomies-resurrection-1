@@ -118,28 +118,51 @@ export const initSockets = (httpServer: HTTPServer) => {
           return;
         }
 
-        // TODO (Phase 3): Process the action
-        // - fold: set player as folded, advance turn
-        // - check: advance turn (if no bet to call)
-        // - call: deduct chips, add to pot, advance turn
-        // - raise: validate amount, deduct chips, add to pot, advance turn
-        // - all-in: move all chips to pot
+        // ==================== CHECK ====================
+        if (data.action === "check") {
+          const currentBet = await Games.getCurrentBet(data.gameId);
+          const playerBet = await Games.getPlayerBet(
+            data.gameId,
+            session.user!.id
+          );
 
-        // For now, just confirm the action was received
-        socket.emit("action:confirmed", { action: data.action });
-        logger.info(`User ${session.user!.id} performed ${data.action} in game ${data.gameId}`);
+          // Rule: can only check if there is no bet to call
+          if (playerBet !== currentBet) {
+            socket.emit("action:rejected", {
+              action: "check",
+              reason: "Cannot check when there is a bet to call",
+            });
+            return;
+          }
 
-        // Broadcast to all players in the game room that an action was taken
-        const roomName = gameRoom(data.gameId);
-        io.to(roomName).emit("player:actionTaken", {
-          userId: session.user!.id,
-          username: session.user!.username,
-          action: data.action,
-          amount: data.amount,
-        });
+          // Advance turn (no chips move)
+          await Games.advanceTurn(data.gameId);
+
+          // Broadcast action
+          const roomName = gameRoom(data.gameId);
+          io.to(roomName).emit("player:actionTaken", {
+            userId: session.user!.id,
+            username: session.user!.username,
+            action: "check",
+          });
+
+          // Detect end of betting round
+          if (await Games.areAllBetsEqual(data.gameId)) {
+            console.log("Betting round complete (check)");
+            // TODO Phase 2: advance phase (flop/turn/river)
+          }
+
+          return; // ⛔ IMPORTANT: stop processing here
+        }
+
+                // ==================== OTHER ACTIONS (later) ====================
+        // fold / call / raise / all-in will go here in future phases
 
       } catch (error) {
-        logger.error(`Error processing action for user ${session.user!.id}:`, error);
+        logger.error(
+          `Error processing action for user ${session.user!.id}:`,
+          error
+        );
         socket.emit("action:rejected", {
           action: data.action,
           reason: "Server error",
