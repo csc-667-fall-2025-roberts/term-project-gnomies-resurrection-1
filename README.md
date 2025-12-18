@@ -50,25 +50,25 @@ Database migrations include:
 **Reference:** Professor's `backend/db/game-cards/` pattern
 
 **SQL queries needed:**
-- [ ] CREATE_DECK: Insert all 52 cards for a game with random shuffle using ROW_NUMBER
-- [ ] DEAL_CARDS: Assign specific cards to a player by updating owner_player_id
-- [ ] GET_PLAYER_CARDS: Fetch player's hole cards with rank and suit joined from cards table
-- [ ] GET_CARDS_FROM_DECK: Pull N cards from deck ordered by position
-- [ ] COUNT_DECK_CARDS: Count remaining undealt cards
+- [x] CREATE_DECK: Insert all 52 cards for a game with random shuffle using ROW_NUMBER
+- [x] DEAL_CARDS: Assign specific cards to a player by updating owner_player_id
+- [x] GET_PLAYER_CARDS: Fetch player's hole cards with rank and suit joined from cards table
+- [x] GET_CARDS_FROM_DECK: Pull N cards from deck ordered by position
+- [x] COUNT_DECK_CARDS: Count remaining undealt cards
 
 **Wrapper functions needed:**
-- [ ] createDeck(gameId) - inserts shuffled deck
-- [ ] dealCards(cardIds, playerId) - assigns cards to player
-- [ ] getPlayerCards(gameId, playerId) - fetches with rank/suit
-- [ ] getCardsFromDeck(gameId, count) - gets N cards
-- [ ] countDeckCards(gameId) - returns remaining count
+- [x] createDeck(gameId) - inserts shuffled deck
+- [x] dealCards(cardIds, playerId) - assigns cards to player
+- [x] getPlayerCards(gameId, playerId) - fetches with rank/suit
+- [x] getCardsFromDeck(gameId, count) - gets N cards
+- [x] countDeckCards(gameId) - returns remaining count
 
 **Testing:**
-- [ ] Deck creates with 52 unique shuffled cards
-- [ ] Can deal 2 cards to each player
-- [ ] Can fetch player's cards with suit and rank
-- [ ] Cards pulled from deck are sequential by position
-- [ ] No duplicate cards across players
+- [x] Deck creates with 52 unique shuffled cards
+- [x] Can deal 2 cards to each player
+- [x] Can fetch player's cards with suit and rank
+- [x] Cards pulled from deck are sequential by position
+- [x] No duplicate cards across players
 
 ---
 
@@ -76,18 +76,18 @@ Database migrations include:
 **Modify:** `src/backend/services/game-service.ts`
 
 **Update startGame() function to:**
-- [ ] Create shuffled deck using createDeck
-- [ ] Deal 2 hole cards to each player in round-robin fashion
-- [ ] Assign sequential positions to players (no shuffle for poker)
-- [ ] Leave TODO comments for blind deductions (Phase 3)
-- [ ] Set first player to act (position 3 or wrap to position 1)
-- [ ] Start game with proper initial state
+- [x] Create shuffled deck using createDeck
+- [x] Deal 2 hole cards to each player in round-robin fashion
+- [x] Assign sequential positions to players (no shuffle for poker)
+- [x] Leave TODO comments for blind deductions (Phase 3)
+- [x] Set first player to act (position 3 or wrap to position 1)
+- [x] Start game with proper initial state
 
 **Testing:**
-- [ ] Starting game creates full deck
-- [ ] Each player receives exactly 2 unique cards
-- [ ] No duplicate cards across all players
-- [ ] Works correctly with 2-9 players
+- [x] Starting game creates full deck
+- [x] Each player receives exactly 2 unique cards
+- [x] No duplicate cards across all players
+- [x] Works correctly with 2-9 players
 
 ---
 
