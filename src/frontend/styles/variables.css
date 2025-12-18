@@ -27,10 +27,19 @@
   --state-completed-bg: #dbeafe;
   --state-completed-text: #1e40af;
 
-  /* Game-Specific Colors */
-  --table-surface: #c9f1cb;
-  --table-accent: #2b6cb0;
-  --chip-color: #ffd166;
+  /* Game-Specific Colors - Casino Poker Theme */
+  --table-felt: #0d5f3c;
+  --table-felt-dark: #084d30;
+  --table-felt-light: #0f7a4b;
+  --table-border: #8b4513;
+  --table-border-dark: #5c3310;
+  --table-surface: radial-gradient(ellipse 80% 60% at 50% 45%, #0f7a4b 0%, #0d5f3c 40%, #084d30 100%);
+  --table-accent: #dc2626;
+  --chip-gold: #fbbf24;
+  --chip-red: #dc2626;
+  --chip-blue: #3b82f6;
+  --chip-green: #22c55e;
+  --chip-black: #1e293b;
 
   /* Spacing Scale */
   --spacing-xs: 0.25rem;

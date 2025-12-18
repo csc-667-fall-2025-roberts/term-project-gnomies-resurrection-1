@@ -27,32 +27,80 @@ body.page-game {
 }
 
 .table-wrapper {
-  width: 720px;
-  height: 520px;
+  width: 760px;
+  height: 500px;
   position: relative;
 }
 
+/* Premium Casino Poker Table */
 .poker-table {
-  background: var(--table-surface);
-  border-radius: 50%;
+  /* Felt texture with radial gradient */
+  background:
+    radial-gradient(ellipse 85% 65% at 50% 45%,
+      var(--table-felt-light) 0%,
+      var(--table-felt) 35%,
+      var(--table-felt-dark) 100%);
+  border-radius: 50% / 42%;
   width: 100%;
   height: 100%;
-  box-shadow: var(--card-shadow-elevated);
   position: relative;
   padding: 40px;
   box-sizing: border-box;
+
+  /* Wood rail border effect */
+  border: 14px solid var(--table-border);
+  box-shadow:
+    /* Outer wood shadow */
+    0 6px 0 var(--table-border-dark),
+    0 12px 24px rgba(0, 0, 0, 0.4),
+    /* Inner felt shadow for depth */
+    inset 0 0 60px rgba(0, 0, 0, 0.25),
+    inset 0 0 100px rgba(0, 0, 0, 0.1);
 }
 
+/* Inner rail highlight */
+.poker-table::before {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border-radius: 50% / 42%;
+  border: 3px solid rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+
+/* Subtle felt texture lines */
+.poker-table::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50% / 42%;
+  background: repeating-linear-gradient(135deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.02) 2px,
+      rgba(0, 0, 0, 0.02) 4px);
+  pointer-events: none;
+}
+
+/* Pot Display - Gold chip stack style */
 .pot {
   position: absolute;
-  top: -100px;
+  top: 15%;
   left: 50%;
   transform: translateX(-50%);
-  background: var(--color-surface);
-  padding: 8px 14px;
-  border-radius: 10px;
-  border: 1px solid #e6e6e6;
-  font-weight: var(--font-weight-bold);
+  background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+  color: var(--chip-gold);
+  padding: 10px 24px;
+  border-radius: 30px;
+  border: 3px solid var(--chip-gold);
+  font-weight: 800;
+  font-size: 1.25rem;
+  letter-spacing: 0.5px;
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  z-index: 10;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .community-cards {
@@ -64,42 +112,90 @@ body.page-game {
   gap: 12px;
 }
 
-/* ==================== OPPONENTS AREA ==================== */
+/* ==================== PLAYER SEATS - CHIP STYLE ==================== */
 
 .player-seat {
-  width: 70px;
-  height: 70px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
-  background: var(--color-surface);
-  border: 2px solid #eee;
+  background: linear-gradient(145deg, #ffffff 0%, #f1f5f9 100%);
+  border: 3px solid #e2e8f0;
   position: absolute;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.15),
+    inset 0 2px 0 rgba(255, 255, 255, 0.8);
   z-index: 6;
-  transition: transform 0.18s;
+  transition: all 0.25s ease;
+}
+
+.player-seat:hover {
+  transform: scale(1.05);
 }
 
 .player-seat__label {
-  font-size: 12px;
+  font-size: 11px;
   text-align: center;
-  line-height: 1.3;
+  line-height: 1.25;
+  padding: 4px;
+}
+
+.player-seat__label strong {
+  display: block;
+  font-size: 12px;
+  color: #1e293b;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 70px;
 }
 
 .player-seat__stack {
   font-size: 11px;
-  color: var(--color-text-muted);
+  color: #22c55e;
+  font-weight: 700;
+}
+
+.current-bet {
+  font-size: 9px;
+  color: var(--table-accent);
+  font-weight: 600;
+  margin-top: 1px;
 }
 
 .player-seat--ghost {
   opacity: 0.35;
 }
 
-/* Turn indicator styles */
+/* Active Turn - Pulsing green glow */
 .player-seat.active-turn {
-  border: 3px solid #22c55e;
-  box-shadow: 0 0 20px rgba(34, 197, 94, 0.5);
+  border-color: #22c55e;
+  box-shadow:
+    0 0 0 4px rgba(34, 197, 94, 0.3),
+    0 0 20px rgba(34, 197, 94, 0.5),
+    0 4px 12px rgba(0, 0, 0, 0.15);
+  animation: seatPulse 2s ease-in-out infinite;
+}
+
+@keyframes seatPulse {
+
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 4px rgba(34, 197, 94, 0.3),
+      0 0 20px rgba(34, 197, 94, 0.5),
+      0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  50% {
+    box-shadow:
+      0 0 0 8px rgba(34, 197, 94, 0.2),
+      0 0 30px rgba(34, 197, 94, 0.6),
+      0 4px 12px rgba(0, 0, 0, 0.15);
+  }
 }
 
 .player-area.active-turn {
@@ -107,9 +203,21 @@ body.page-game {
   box-shadow: 0 0 20px rgba(34, 197, 94, 0.5);
 }
 
+/* Empty Seat - Dashed outline */
 .player-seat--empty {
-  opacity: 0.4;
-  border-style: dashed;
+  background: rgba(255, 255, 255, 0.3);
+  border: 2px dashed rgba(255, 255, 255, 0.5);
+  box-shadow: none;
+}
+
+.player-seat--empty .player-seat__label {
+  color: rgba(255, 255, 255, 0.7);
+  font-style: italic;
+}
+
+.player-seat--empty:hover {
+  background: rgba(255, 255, 255, 0.4);
+  border-color: rgba(255, 255, 255, 0.7);
 }
 
 .seat-pos-1 {
