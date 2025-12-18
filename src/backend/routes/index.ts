@@ -1,4 +1,5 @@
 export { default as auth } from "./auth";
+export { default as betting } from "./betting";
 export { default as db } from "./db";
 export { default as chat } from "./chat";
 export { default as games } from "./games";

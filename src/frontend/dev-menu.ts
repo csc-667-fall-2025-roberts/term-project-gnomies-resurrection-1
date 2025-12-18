@@ -79,6 +79,15 @@ function createDevMenu() {
         <button data-action="disable-actions">Disable Buttons</button>
       </div>
 
+      <div class="dev-menu-section" style="background: rgba(0,100,0,0.2); border: 1px solid green;">
+        <h4>🎰 API Betting (Real)</h4>
+        <button data-action="api-fold" style="background: #c0392b;">FOLD</button>
+        <button data-action="api-check" style="background: #2980b9;">CHECK</button>
+        <button data-action="api-call" style="background: #27ae60;">CALL</button>
+        <button data-action="api-raise" style="background: #f39c12;">RAISE $50</button>
+        <button data-action="api-allin" style="background: #8e44ad;">ALL-IN</button>
+      </div>
+
       <div class="dev-menu-section">
         <h4>Turn Timer</h4>
         <button data-action="start-timer">Start Timer (30s)</button>
@@ -320,6 +329,27 @@ function handleAction(action: string) {
                 (btn as HTMLButtonElement).disabled = true;
             });
             document.querySelector(".player-controls")?.classList.add("disabled");
+            break;
+
+        // API Betting (Real server calls)
+        case "api-fold":
+            apiBettingAction("fold");
+            break;
+
+        case "api-check":
+            apiBettingAction("check");
+            break;
+
+        case "api-call":
+            apiBettingAction("call");
+            break;
+
+        case "api-raise":
+            apiBettingAction("raise", 50);
+            break;
+
+        case "api-allin":
+            apiBettingAction("all-in");
             break;
 
         // Turn Timer
@@ -737,5 +767,49 @@ function toggleCallAmount(amount: number): void {
         callBtn.textContent = "Call";
         callBtn.appendChild(badge);
         console.log(`[DEV] Call amount badge added: $${amount}`);
+    }
+}
+
+/**
+ * Make real API betting action call
+ * @param action - The betting action: fold, check, call, raise, all-in
+ * @param amount - Required for raise action (the total amount to raise TO)
+ */
+async function apiBettingAction(action: string, amount?: number): Promise<void> {
+    // Get game ID from body data attribute
+    const gameId = document.body.dataset.gameId;
+
+    if (gameId === undefined) {
+        console.error("[DEV] No gameId found on body element");
+        alert("Error: No game ID found. Are you on a game page?");
+        return;
+    }
+
+    console.log(`[DEV] API Betting: ${action.toUpperCase()}${amount !== undefined ? ` $${amount}` : ""}`);
+
+    try {
+        const options: RequestInit = {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+        };
+
+        // Add body for raise action
+        if (action === "raise" && amount !== undefined) {
+            options.body = JSON.stringify({ amount });
+        }
+
+        const response = await fetch(`/games/${gameId}/${action}`, options);
+        const data = await response.json();
+
+        if (response.ok) {
+            console.log(`[DEV] ✅ ${action.toUpperCase()} success:`, data);
+            alert(`✅ ${action.toUpperCase()} successful!\n\nNext player: ${data.nextPlayerId}\n${data.newPot !== undefined ? `Pot: $${data.newPot}` : ""}`);
+        } else {
+            console.error(`[DEV] ❌ ${action.toUpperCase()} failed:`, data);
+            alert(`❌ ${action.toUpperCase()} failed!\n\n${data.error || "Unknown error"}`);
+        }
+    } catch (error) {
+        console.error(`[DEV] ❌ ${action.toUpperCase()} error:`, error);
+        alert(`❌ Network error: ${error instanceof Error ? error.message : "Unknown"}`);
     }
 }

@@ -62,16 +62,22 @@ export const GET_CURRENT_TURN = `
   SELECT current_turn_user_id FROM games WHERE id = $1
 `;
 
+// Get next active (non-folded) player after current position
+// Folded players have bet_amount = -1, so we skip them (bet_amount >= 0)
 export const GET_NEXT_PLAYER = `
   SELECT user_id FROM game_players
-  WHERE game_id = $1 AND position > $2
+  WHERE game_id = $1 
+    AND position > $2 
+    AND bet_amount >= 0
   ORDER BY position ASC
   LIMIT 1
 `;
 
+// Get first active (non-folded) player - for wrapping around
 export const GET_FIRST_PLAYER = `
   SELECT user_id FROM game_players
-  WHERE game_id = $1
+  WHERE game_id = $1 
+    AND bet_amount >= 0
   ORDER BY position ASC
   LIMIT 1
 `;
@@ -110,6 +116,48 @@ export const GET_PLAYERS_WITH_STATS = `
   JOIN users u ON gp.user_id = u.id
   WHERE gp.game_id = $1
   ORDER BY gp.position NULLS LAST, gp.joined_at ASC
+`;
+
+export const UPDATE_PLAYER_CHIPS = `
+  UPDATE game_players
+  SET player_money = player_money + $3
+  WHERE game_id = $1 AND user_id = $2
+  RETURNING player_money
+`;
+
+export const UPDATE_PLAYER_BET = `
+  UPDATE game_players
+  SET bet_amount = $3
+  WHERE game_id = $1 AND user_id = $2
+  RETURNING *
+`;
+
+export const UPDATE_POT = `
+  UPDATE games
+  SET pot_money = pot_money + $2
+  WHERE id = $1
+  RETURNING pot_money
+`;
+
+// find MAX bet amount for current round
+export const GET_CURRENT_BET = `
+  SELECT MAX(bet_amount) FROM game_players WHERE game_id = $1 AND bet_amount > 0
+`;
+
+export const GET_PLAYER_BET = `
+  SELECT bet_amount FROM game_players WHERE game_id = $1 AND user_id = $2
+`;
+
+export const CHECK_ALL_BETS_EQUAL = `
+  SELECT COUNT(*) FROM game_players WHERE game_id = $1 AND bet_amount = $2
+`;
+
+// set all bets to 0 for new round
+export const RESET_BETS = `
+  UPDATE game_players
+  SET bet_amount = 0
+  WHERE game_id = $1
+  RETURNING *
 `;
 
 // End game query - transitions to game-over state
