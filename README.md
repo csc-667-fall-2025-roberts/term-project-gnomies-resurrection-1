@@ -187,29 +187,29 @@ Database migrations include:
 
 ## Phase 3: Betting Logic
 
-### Task B1: Betting Queries
+### Task B1: Betting Queries [Bao] COMPLETE
 **Modify:**
 - `src/backend/db/games/sql.ts`
 - `src/backend/db/games/index.ts`
 
 **SQL queries to add:**
-- [ ] UPDATE_PLAYER_CHIPS: Add or subtract from player_money and return new balance
-- [ ] UPDATE_PLAYER_BET: Set bet_amount for a player
-- [ ] UPDATE_POT: Increment pot_money and return new total
-- [ ] GET_CURRENT_BET: Find MAX bet_amount for current round
-- [ ] GET_PLAYER_BET: Fetch specific player's current bet
-- [ ] CHECK_ALL_BETS_EQUAL: Count distinct bet amounts for active players
-- [ ] RESET_BETS: Set all bet_amount to 0 for new round
+- [x] UPDATE_PLAYER_CHIPS: Add or subtract from player_money and return new balance
+- [x] UPDATE_PLAYER_BET: Set bet_amount for a player
+- [x] UPDATE_POT: Increment pot_money and return new total
+- [x] GET_CURRENT_BET: Find MAX bet_amount for current round
+- [x] GET_PLAYER_BET: Fetch specific player's current bet
+- [x] CHECK_ALL_BETS_EQUAL: Count distinct bet amounts for active players
+- [x] RESET_BETS: Set all bet_amount to 0 for new round
 
 **Wrapper functions to add:**
-- [ ] deductChips(gameId, userId, amount) - decreases player chips
-- [ ] addChips(gameId, userId, amount) - increases player chips
-- [ ] updatePlayerBet(gameId, userId, amount) - sets current bet
-- [ ] addToPot(gameId, amount) - increases pot
-- [ ] getCurrentBet(gameId) - returns highest bet
-- [ ] getPlayerBet(gameId, userId) - returns player's bet
-- [ ] areAllBetsEqual(gameId) - checks if round complete
-- [ ] resetBets(gameId) - clears all bets
+- [x] deductChips(gameId, userId, amount) - decreases player chips
+- [x] addChips(gameId, userId, amount) - increases player chips
+- [x] updatePlayerBet(gameId, userId, amount) - sets current bet
+- [x] addToPot(gameId, amount) - increases pot
+- [x] getCurrentBet(gameId) - returns highest bet
+- [x] getPlayerBet(gameId, userId) - returns player's bet
+- [x] areAllBetsEqual(gameId) - checks if round complete
+- [x] resetBets(gameId) - clears all bets
 
 ---
 
@@ -217,19 +217,19 @@ Database migrations include:
 **Create:** `src/backend/services/betting-service.ts`
 
 **Functions to implement:**
-- [ ] validateTurn(gameId, userId) - throws error if not player's turn
-- [ ] fold(gameId, userId) - sets bet_amount to -1 to mark folded
-- [ ] call(gameId, userId) - matches current bet and adds difference to pot
-- [ ] raise(gameId, userId, raiseAmount) - increases bet and adds to pot
-- [ ] check(gameId, userId) - passes if no bet to call, errors otherwise
-- [ ] allIn(gameId, userId) - bets all remaining chips
-- [ ] advanceTurn(gameId) - moves to next active non-folded player
+- [x] validateTurn(gameId, userId) - throws error if not player's turn
+- [x] fold(gameId, userId) - sets bet_amount to -1 to mark folded
+- [x] call(gameId, userId) - matches current bet and adds difference to pot
+- [x] raise(gameId, userId, raiseAmount) - increases bet and adds to pot
+- [x] check(gameId, userId) - passes if no bet to call, errors otherwise
+- [x] allIn(gameId, userId) - bets all remaining chips
+- [x] isBettingRoundComplete(gameId) - checks if all bets equal
 
 **Each function should:**
-- [ ] Validate it's the player's turn
-- [ ] Update chips, bets, and pot in database
-- [ ] Advance turn to next player
-- [ ] Handle edge cases like insufficient chips
+- [x] Validate it's the player's turn
+- [x] Update chips, bets, and pot in database
+- [x] Advance turn to next player
+- [x] Handle edge cases like insufficient chips
 
 ---
 
@@ -237,21 +237,21 @@ Database migrations include:
 **Create:** `src/backend/routes/betting.ts`
 
 **Routes to implement:**
-- [ ] POST /games/:id/fold - calls BettingService.fold
-- [ ] POST /games/:id/call - calls BettingService.call
-- [ ] POST /games/:id/raise - validates amount, calls BettingService.raise
-- [ ] POST /games/:id/check - calls BettingService.check
-- [ ] POST /games/:id/all-in - calls BettingService.allIn
+- [x] POST /games/:id/fold - calls BettingService.fold
+- [x] POST /games/:id/call - calls BettingService.call
+- [x] POST /games/:id/raise - validates amount, calls BettingService.raise
+- [x] POST /games/:id/check - calls BettingService.check
+- [x] POST /games/:id/all-in - calls BettingService.allIn
 
 **Each route must:**
-- [ ] Extract gameId from params and userId from session
-- [ ] Call corresponding service function with proper error handling
-- [ ] Emit PLAYER_ACTION socket event to game room
-- [ ] Return JSON success or error response
-- [ ] Log errors with logger
+- [x] Extract gameId from params and userId from session
+- [x] Call corresponding service function with proper error handling
+- [x] Emit betting:action socket event to game room
+- [x] Return JSON success or error response
+- [x] Log errors with logger
 
 **Add to server.ts:**
-- [ ] Import bettingRoutes and mount at /games path
+- [x] Import bettingRoutes and mount at /games path
 
 **Testing:**
 - [ ] Can fold and be marked as folded

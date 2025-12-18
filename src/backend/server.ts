@@ -69,6 +69,7 @@ app.use("/db", routes.db);                    // remove this for production
 app.use("/lobby", requireUser, routes.lobby);
 app.use("/chat", requireUser, routes.chat);
 app.use("/games", requireUser, routes.games);
+app.use("/games", requireUser, routes.betting); // Betting actions: /games/:id/fold, /call, /raise, etc.
 
 app.use((_request, _response, next) => {
   next(createHttpError(404));
