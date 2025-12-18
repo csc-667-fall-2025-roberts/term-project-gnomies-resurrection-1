@@ -44,6 +44,21 @@ export async function validateTurn(gameId: number, userId: number): Promise<void
 }
 
 /**
+ * Get player's current chip count
+ * @throws Error if player not found
+ */
+async function getPlayerChips(gameId: number, userId: number): Promise<number> {
+    const players = await Games.getPlayersWithStats(gameId);
+    const player = players.find(p => p.user_id === userId);
+
+    if (player === undefined) {
+        throw new Error("Player not found in game");
+    }
+
+    return player.chip_count;
+}
+
+/**
  * Player folds - sets bet_amount to -1 to mark as folded
  */
 export async function fold(gameId: number, userId: number): Promise<BettingResult> {
@@ -111,6 +126,12 @@ export async function call(gameId: number, userId: number): Promise<BettingResul
         throw new Error("Nothing to call - use check instead");
     }
 
+    // Validate player has enough chips
+    const playerChips = await getPlayerChips(gameId, userId);
+    if (playerChips < callAmount) {
+        throw new Error(`Not enough chips to call. Have $${playerChips}, need $${callAmount}. Use all-in instead.`);
+    }
+
     // Deduct chips from player
     const newChips = await Games.deductChips(gameId, userId, callAmount);
 
@@ -158,6 +179,12 @@ export async function raise(
 
     // Calculate chips needed (difference from what player already bet)
     const chipsNeeded = raiseToAmount - playerBet;
+
+    // Validate player has enough chips
+    const playerChips = await getPlayerChips(gameId, userId);
+    if (playerChips < chipsNeeded) {
+        throw new Error(`Not enough chips to raise. Have $${playerChips}, need $${chipsNeeded}. Use all-in instead.`);
+    }
 
     // Deduct chips from player
     const newChips = await Games.deductChips(gameId, userId, chipsNeeded);

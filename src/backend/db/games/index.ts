@@ -86,6 +86,8 @@ const getPlayerPosition = async (gameId: number, userId: number): Promise<number
   return result?.position ?? null;
 };
 
+// Advance turn to next active (non-folded) player
+// Skips folded players automatically via SQL (bet_amount >= 0)
 const advanceTurn = async (gameId: number): Promise<number> => {
   const currentTurn = await getCurrentTurn(gameId);
   if (currentTurn === null) {
@@ -98,15 +100,21 @@ const advanceTurn = async (gameId: number): Promise<number> => {
     throw new Error("Current turn player has no position");
   }
 
-  // Try to get next player
+  // Try to get next active (non-folded) player
   let nextPlayer = await db.oneOrNone<{ user_id: number }>(
     GET_NEXT_PLAYER,
     [gameId, currentPosition]
   );
 
-  // If no next player, wrap to first
+  // If no next player found, wrap to first active player
   if (nextPlayer === null) {
-    nextPlayer = await db.one<{ user_id: number }>(GET_FIRST_PLAYER, [gameId]);
+    nextPlayer = await db.oneOrNone<{ user_id: number }>(GET_FIRST_PLAYER, [gameId]);
+
+    // If still no player found, everyone else has folded
+    if (nextPlayer === null) {
+      // Return current player as winner (they're the only one left)
+      return currentTurn;
+    }
   }
 
   await setCurrentTurn(gameId, nextPlayer.user_id);

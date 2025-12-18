@@ -62,16 +62,22 @@ export const GET_CURRENT_TURN = `
   SELECT current_turn_user_id FROM games WHERE id = $1
 `;
 
+// Get next active (non-folded) player after current position
+// Folded players have bet_amount = -1, so we skip them (bet_amount >= 0)
 export const GET_NEXT_PLAYER = `
   SELECT user_id FROM game_players
-  WHERE game_id = $1 AND position > $2
+  WHERE game_id = $1 
+    AND position > $2 
+    AND bet_amount >= 0
   ORDER BY position ASC
   LIMIT 1
 `;
 
+// Get first active (non-folded) player - for wrapping around
 export const GET_FIRST_PLAYER = `
   SELECT user_id FROM game_players
-  WHERE game_id = $1
+  WHERE game_id = $1 
+    AND bet_amount >= 0
   ORDER BY position ASC
   LIMIT 1
 `;
