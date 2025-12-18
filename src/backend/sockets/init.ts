@@ -7,6 +7,9 @@ import { Games } from "../db";
 import logger from "../lib/logger";
 import { gameRoom, initGameSocket } from "./game-socket";
 import { sanitizeString } from "../utils/sanitize";
+import * as PlayerCards from "../db/player-cards";
+
+
 
 export const initSockets = (httpServer: HTTPServer) => {
   const io = new Server(httpServer);
@@ -35,6 +38,7 @@ export const initSockets = (httpServer: HTTPServer) => {
         logger.error(`Failed to join game room for user ${session.user!.id}:`, error);
       });
     }
+      
 
     // Handle game state request - return full game state to requesting client
     socket.on("game:requestState", async ({ gameId }: { gameId: string | number }) => {
@@ -42,11 +46,14 @@ export const initSockets = (httpServer: HTTPServer) => {
         const parsedGameId = typeof gameId === "string" ? parseInt(gameId) : gameId;
         const game = await Games.get(parsedGameId);
         const players = await Games.getPlayersWithStats(parsedGameId);
+        const myCards = await PlayerCards.getPlayerCards(parsedGameId, session.user!.id);
+
 
         socket.emit("game:state", {
           ...game,
           players,
           is_my_turn: game.current_turn_user_id === session.user!.id,
+          my_cards: myCards,
         });
       } catch (error) {
         logger.error(`Error fetching game state for game ${gameId}:`, error);
