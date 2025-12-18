@@ -95,13 +95,13 @@ Database migrations include:
 **Modify:** `src/frontend/game/ui-updates.ts`
 
 **Functions needed:**
-- [ ] updatePlayerHand(cards[]) - displays player's 2 hole cards with rank and suit
-- [ ] Handle missing elements gracefully
-- [ ] Apply card CSS classes (rank-A, suit-H, etc.)
+- [x] updatePlayerHand(cards[]) - displays player's 2 hole cards with rank and suit
+- [x] Handle missing elements gracefully
+- [x] Apply card CSS classes (rank-A, suit-H, etc.)
 
 **Testing:**
-- [ ] Player sees their 2 hole cards after game starts
-- [ ] Cards show correct rank and suit styling
+- [x] Player sees their 2 hole cards after game starts
+- [x] Cards show correct rank and suit styling
 
 ---
 
