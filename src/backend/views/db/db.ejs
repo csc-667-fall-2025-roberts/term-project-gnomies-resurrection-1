@@ -16,6 +16,24 @@
 
 <h1>Database Contents</h1>
 
+<form method="POST" action="/db/reset-games" style="margin-bottom: 30px;">
+  <button
+    type="submit"
+    onclick="return confirm('This will DELETE ALL game-related data. Continue?')"
+    style="
+      background: #b00020;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      font-size: 14px;
+      cursor: pointer;
+    "
+  >
+    Clear All Game Data
+  </button>
+</form>
+
+
 <% for (const table in data) { %>
   <h2><%= table %></h2>
 

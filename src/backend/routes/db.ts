@@ -35,4 +35,19 @@ router.get("/", async (req, res, next) => {
   }
 });
 
+// clear all game related tables
+router.post("/reset-games", async (req, res, next) => {
+  console.log("POST /db/reset-games HIT");
+  try {
+    await pool.query("DELETE FROM player_cards");
+    await pool.query("DELETE FROM game_players");
+    await pool.query("DELETE FROM games");
+
+
+    res.redirect("/db");
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;
