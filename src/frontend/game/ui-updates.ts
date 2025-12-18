@@ -71,31 +71,44 @@ function getSuitSymbol(suit: string): string {
 }
 
 /**
- * Update player's hand cards
- * @param cards - Array of cards in player's hand
+ * Update player's private hole cards
+ * @param cards - Array of player's hole cards (rank + suit)
  */
-export function updatePlayerHand(cards: Card[]): void {
-    // Explicit null check
-    if (playerHandContainer === null) {
-        return;
+export function updatePlayerHand(cards: { rank: string; suit: string }[]): void {
+    // Graceful handling: missing container or invalid data
+    if (!playerHandContainer || !Array.isArray(cards) || cards.length === 0) {
+      return;
     }
-
-    // If no cards, don't update
-    if (!cards || cards.length === 0) {
-        return;
-    }
-
-    // Clear and rebuild
+  
+    // Clear existing cards (idempotent update)
     playerHandContainer.innerHTML = "";
+  
     cards.forEach((card) => {
-        const cardEl = document.createElement("div");
-        cardEl.className = `playing-card playing-card--small suit-${card.suit} rank-${card.rank}`;
-        cardEl.dataset.rank = card.rank;
-        cardEl.dataset.suit = card.suit;
-        cardEl.textContent = `${card.rank}${getSuitSymbol(card.suit)}`;
-        playerHandContainer.appendChild(cardEl);
+      // Validate card shape defensively
+      if (!card.rank || !card.suit) {
+        return;
+      }
+  
+      const cardEl = document.createElement("div");
+  
+      // Base card classes
+      cardEl.classList.add("playing-card", "playing-card--hole");
+  
+      // Semantic CSS hooks
+      cardEl.classList.add(`rank-${card.rank}`);
+      cardEl.classList.add(`suit-${card.suit}`);
+  
+      // Data attributes for debugging / testing
+      cardEl.dataset.rank = card.rank;
+      cardEl.dataset.suit = card.suit;
+  
+      // Visible face value
+      cardEl.textContent = `${card.rank}${getSuitSymbol(card.suit)}`;
+  
+      playerHandContainer.appendChild(cardEl);
     });
-}
+  }
+  
 
 /**
  * Update player seats display
