@@ -3,6 +3,7 @@ import { ColumnDefinitions, MigrationBuilder } from "node-pg-migrate";
 export const shorthands: ColumnDefinitions | undefined = undefined;
 
 export async function up(pgm: MigrationBuilder): Promise<void> {
+  // Game state strings
   pgm.createType("game_state", [
     "lobby",
     "pre-flop",
@@ -19,8 +20,6 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     "player",
   ]);
 
-
-  // users
   pgm.createTable("users", {
     id: { type: "serial", primaryKey: true },
     username: { type: "varchar(100)", notNull: true, unique: true },
@@ -35,42 +34,54 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     },
   });
 
-  // users
   pgm.createTable("session", {
-    sid: {
-      type: "varchar",
-      notNull: true,
-      primaryKey: true,
-    },
-    sess: {
-      type: "json",
-      notNull: true,
-    },
-    expire: {
-      type: "timestamp(6)",
-      notNull: true,
-    },
+    sid: { type: "varchar", primaryKey: true },
+    sess: { type: "json", notNull: true },
+    expire: { type: "timestamp(6)", notNull: true },
   });
-  
-  pgm.createIndex("session", "expire");
-  
 
-  // games
+  pgm.createIndex("session", "expire");
+
   pgm.createTable("games", {
     id: { type: "serial", primaryKey: true },
+
+    name: {
+      type: "varchar(100)",
+      comment: "Optional display name for the game",
+    },
+
     created_by: {
       type: "integer",
       notNull: true,
       references: "users(id)",
       onDelete: "CASCADE",
     },
+
     max_players: { type: "integer", notNull: true },
+
     state: {
       type: "game_state",
       notNull: true,
       default: "lobby",
     },
+
     pot_money: { type: "integer", notNull: true, default: 0 },
+
+    current_turn_user_id: {
+      type: "integer",
+      references: "users(id)",
+      onDelete: "SET NULL",
+    },
+
+    started_at: { type: "timestamp with time zone" },
+    ended_at: { type: "timestamp with time zone" },
+
+    winner_id: {
+      type: "integer",
+      references: "users(id)",
+      onDelete: "SET NULL",
+    },
+
     created_at: {
       type: "timestamp with time zone",
       notNull: true,
@@ -79,29 +90,39 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
   });
 
   pgm.createIndex("games", "state");
+  pgm.createIndex("games", "current_turn_user_id");
 
-  // players in games
   pgm.createTable("game_players", {
     id: { type: "serial", primaryKey: true },
+
     game_id: {
       type: "integer",
       notNull: true,
       references: "games(id)",
       onDelete: "CASCADE",
     },
+
     user_id: {
       type: "integer",
       notNull: true,
       references: "users(id)",
       onDelete: "CASCADE",
     },
+
     player_money: { type: "integer", notNull: true, default: 0 },
     bet_amount: { type: "integer", notNull: true, default: 0 },
+
     role: {
       type: "player_role",
       notNull: true,
       default: "player",
     },
+
+    position: {
+      type: "integer",
+      comment: "Player position at table (1-based, used for turn order)",
+    },
+
     joined_at: {
       type: "timestamp with time zone",
       notNull: true,
@@ -114,8 +135,8 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
   });
 
   pgm.createIndex("game_players", "game_id");
+  pgm.createIndex("game_players", ["game_id", "position"]);
 
-  // cards
   pgm.createTable("cards", {
     id: "id",
     rank: { type: "varchar(2)", notNull: true },
@@ -130,35 +151,40 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
 
   pgm.createIndex("cards", "rank");
 
-  // cards of players in a game
   pgm.createTable("player_cards", {
     id: "id",
+
     game_id: {
       type: "integer",
       notNull: true,
       references: "games(id)",
       onDelete: "CASCADE",
     },
+
     card_id: {
       type: "integer",
       notNull: true,
       references: "cards(id)",
       onDelete: "CASCADE",
     },
+
     owner_player_id: {
       type: "integer",
       references: "users(id)",
       onDelete: "CASCADE",
     },
+
     position: {
       type: "integer",
-      comment: "Position in deck or hand ordering, idk if we will use this...",
+      comment: "Deck position or hand ordering",
     },
+
     created_at: {
       type: "timestamp",
       notNull: true,
       default: pgm.func("current_timestamp"),
     },
+
     updated_at: {
       type: "timestamp",
       notNull: true,
@@ -174,7 +200,6 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
   pgm.createIndex("player_cards", ["game_id", "owner_player_id"]);
   pgm.createIndex("player_cards", ["game_id", "owner_player_id", "position"]);
 
-  // community cards
   pgm.createTable(
     "community_cards",
     {
@@ -200,20 +225,23 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
 
   pgm.createIndex("community_cards", "game_id");
 
-  // chat messages
   pgm.createTable("chat_messages", {
     id: { type: "serial", primaryKey: true },
+
     user_id: {
       type: "integer",
       references: "users(id)",
       onDelete: "SET NULL",
     },
+
     game_id: {
       type: "integer",
       references: "games(id)",
       onDelete: "CASCADE",
     },
+
     message_text: { type: "text", notNull: true },
+
     created_at: {
       type: "timestamp with time zone",
       notNull: true,
@@ -221,7 +249,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     },
   });
 
-  // add cards to database
+  // Seed card deck into database
   const suits = [
     { code: "H", name: "Hearts" },
     { code: "D", name: "Diamonds" },
@@ -261,12 +289,12 @@ export async function down(pgm: MigrationBuilder): Promise<void> {
   pgm.dropTable("chat_messages", { cascade: true });
   pgm.dropTable("community_cards", { cascade: true });
   pgm.dropTable("player_cards", { cascade: true });
-  pgm.dropTable("game_players", { cascade: true });
   pgm.dropTable("cards", { cascade: true });
+  pgm.dropTable("game_players", { cascade: true });
   pgm.dropTable("games", { cascade: true });
-  pgm.dropTable("users", { cascade: true });
   pgm.dropTable("session", { cascade: true });
-  pgm.dropType("game_state");
-  pgm.dropType("player_role");
+  pgm.dropTable("users", { cascade: true });
 
+  pgm.dropType("player_role");
+  pgm.dropType("game_state");
 }
