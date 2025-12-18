@@ -17,6 +17,13 @@ import {
   SET_CURRENT_TURN,
   SET_PLAYER_POSITION,
   START_GAME,
+  UPDATE_PLAYER_CHIPS,
+  UPDATE_PLAYER_BET,
+  UPDATE_POT,
+  GET_CURRENT_BET,
+  GET_PLAYER_BET,
+  CHECK_ALL_BETS_EQUAL,
+  RESET_BETS,
 } from "./sql";
 
 // Type for player data with stats (used on game page)
@@ -114,20 +121,81 @@ const start = async (gameId: number, firstPlayerId: number) =>
 const endGame = async (gameId: number) =>
   await db.one<Game>(END_GAME, [gameId]);
 
+// ==================== BETTING FUNCTIONS ====================
+
+// Deduct chips from a player (for betting/calling)
+const deductChips = async (gameId: number, userId: number, amount: number): Promise<number> => {
+  const result = await db.one<{ player_money: number }>(UPDATE_PLAYER_CHIPS, [gameId, userId, -amount]);
+  return result.player_money;
+};
+
+// Add chips to a player (for winning pot)
+const addChips = async (gameId: number, userId: number, amount: number): Promise<number> => {
+  const result = await db.one<{ player_money: number }>(UPDATE_PLAYER_CHIPS, [gameId, userId, amount]);
+  return result.player_money;
+};
+
+// Update a player's current bet amount
+const updatePlayerBet = async (gameId: number, userId: number, amount: number) =>
+  await db.one(UPDATE_PLAYER_BET, [gameId, userId, amount]);
+
+// Add chips to the pot
+const addToPot = async (gameId: number, amount: number): Promise<number> => {
+  const result = await db.one<{ pot_money: number }>(UPDATE_POT, [gameId, amount]);
+  return result.pot_money;
+};
+
+// Get the current highest bet in the round
+const getCurrentBet = async (gameId: number): Promise<number> => {
+  const result = await db.oneOrNone<{ max: number }>(GET_CURRENT_BET, [gameId]);
+  return result?.max ?? 0;
+};
+
+// Get a specific player's current bet
+const getPlayerBet = async (gameId: number, userId: number): Promise<number> => {
+  const result = await db.oneOrNone<{ bet_amount: number }>(GET_PLAYER_BET, [gameId, userId]);
+  return result?.bet_amount ?? 0;
+};
+
+// Check if all active players have equal bets (betting round complete)
+// Active players are those with bet_amount >= 0 (not folded)
+const areAllBetsEqual = async (gameId: number): Promise<boolean> => {
+  // Count distinct bet amounts among active (non-folded) players
+  const result = await db.one<{ count: string }>(`
+    SELECT COUNT(DISTINCT bet_amount) as count 
+    FROM game_players 
+    WHERE game_id = $1 AND bet_amount >= 0
+  `, [gameId]);
+  // If only 1 distinct bet amount, all bets are equal
+  return parseInt(result.count) <= 1;
+};
+
+// Reset all player bets to 0 for a new betting round
+const resetBets = async (gameId: number) =>
+  await db.none(RESET_BETS, [gameId]);
+
 export {
+  addChips,
+  addToPot,
   advanceTurn,
+  areAllBetsEqual,
   create,
+  deductChips,
   endGame,
   get,
   getByUser,
+  getCurrentBet,
   getCurrentTurn,
+  getPlayerBet,
   getPlayerIds,
   getPlayerPosition,
   getPlayersWithStats,
   join,
   leave,
   list,
+  resetBets,
   setCurrentTurn,
   setPlayerPosition,
   start,
+  updatePlayerBet,
 };
