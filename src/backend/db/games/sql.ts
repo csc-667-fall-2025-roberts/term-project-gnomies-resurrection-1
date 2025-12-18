@@ -167,3 +167,10 @@ export const END_GAME = `
   WHERE id = $1
   RETURNING *
 `;
+
+export const UPDATE_GAME_STATE = `
+  UPDATE games
+  SET state = $2
+  WHERE id = $1
+`;
+

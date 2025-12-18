@@ -20,13 +20,14 @@ let raiseAmount: number = 0;
 let currentMinRaise: number = 0;
 let currentMaxRaise: number = 0;
 
-// Cache DOM elements
-const foldBtn = document.querySelector<HTMLButtonElement>("#fold-btn");
-const checkBtn = document.querySelector<HTMLButtonElement>("#check-btn");
-const callBtn = document.querySelector<HTMLButtonElement>("#call-btn");
-const raiseBtn = document.querySelector<HTMLButtonElement>("#raise-btn");
-const raiseInput = document.querySelector<HTMLInputElement>("#raise-input");
-const allInBtn = document.querySelector<HTMLButtonElement>("#all-in-btn");
+// Track action buttons
+let foldBtn: HTMLButtonElement | null = null;
+let checkBtn: HTMLButtonElement | null = null;
+let callBtn: HTMLButtonElement | null = null;
+let raiseBtn: HTMLButtonElement | null = null;
+let raiseInput: HTMLInputElement | null = null;
+let allInBtn: HTMLButtonElement | null = null; // not added as of Dec 18th
+
 
 // Callback type for action handlers
 type ActionCallback = (action: BettingAction, amount?: number) => void;
@@ -40,6 +41,20 @@ let onActionCallback: ActionCallback | null = null;
  */
 export function initializePlayerActions(onAction: ActionCallback): void {
     onActionCallback = onAction;
+
+    const foldBtn  = document.querySelector<HTMLButtonElement>(".btn-fold");
+    const checkBtn = document.querySelector<HTMLButtonElement>(".btn-check");
+    const callBtn  = document.querySelector<HTMLButtonElement>(".btn-call");
+    const raiseBtn = document.querySelector<HTMLButtonElement>(".btn-raise");
+    const raiseInput = document.querySelector<HTMLInputElement>(".raise-input");
+    const allInBtn = document.querySelector<HTMLButtonElement>(".btn-all-in");
+  
+    console.log("Initializing player actions", {
+      foldBtn,
+      checkBtn,
+      callBtn,
+      raiseBtn,
+    });
 
     // Fold button
     if (foldBtn !== null) {

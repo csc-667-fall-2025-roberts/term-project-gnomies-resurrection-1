@@ -8,6 +8,8 @@ import logger from "../lib/logger";
 import { gameRoom, initGameSocket } from "./game-socket";
 import { sanitizeString } from "../utils/sanitize";
 import * as PlayerCards from "../db/player-cards";
+import * as RoundService from "../services/round-service";
+
 
 
 
@@ -90,6 +92,11 @@ export const initSockets = (httpServer: HTTPServer) => {
       try {
         const game = await Games.get(data.gameId);
 
+        console.log("RECEIVED player action (before turn validation and state validations):", {
+          user: session.user!.username,
+          data,
+        });
+
         // Validate it's the player's turn
         if (game.current_turn_user_id !== session.user!.id) {
           socket.emit("action:rejected", {
@@ -149,14 +156,44 @@ export const initSockets = (httpServer: HTTPServer) => {
           // Detect end of betting round
           if (await Games.areAllBetsEqual(data.gameId)) {
             console.log("Betting round complete (check)");
-            // TODO Phase 2: advance phase (flop/turn/river)
+
+          // After advancing the turn
+          const isComplete = await RoundService.isBettingRoundComplete(data.gameId);
+
+          if (isComplete) {
+            const updatedGame = await Games.get(data.gameId);
+
+            let dealResult;
+
+            switch (updatedGame.state) {
+              case "pre-flop":
+                dealResult = await RoundService.dealFlop(data.gameId);
+                io.to(roomName).emit("flop:revealed", dealResult);
+                break;
+
+              case "flop":
+                dealResult = await RoundService.dealTurn(data.gameId);
+                io.to(roomName).emit("turn:revealed", dealResult);
+                break;
+
+              case "turn":
+                dealResult = await RoundService.dealRiver(data.gameId);
+                io.to(roomName).emit("river:revealed", dealResult);
+                break;
+
+              case "river":
+                // call showdown later
+                break;
+            }
           }
 
-          return; // ⛔ IMPORTANT: stop processing here
+          }
+
+          return;
         }
 
                 // ==================== OTHER ACTIONS (later) ====================
-        // fold / call / raise / all-in will go here in future phases
+        // fold / call / raise / all in will go here in future phases
 
       } catch (error) {
         logger.error(

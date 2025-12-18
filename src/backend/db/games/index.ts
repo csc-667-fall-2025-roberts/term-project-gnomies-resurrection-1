@@ -1,5 +1,6 @@
 import { Game, GameState } from "../../../types/types";
 import db from "../connection";
+import * as sql from "./sql";
 import {
   CREATE_GAME,
   END_GAME,
@@ -36,6 +37,10 @@ export type PlayerWithStats = {
   current_bet: number;
   role: string; // 'dealer', 'small_blind', 'big_blind', 'player'
 };
+
+export async function updateGameState(gameId: number, state: string) {
+  await db.none(sql.UPDATE_GAME_STATE, [gameId, state]);
+}
 
 const create = async (user_id: number, name?: string, maxPlayers: number = 4) =>
   await db.one<Game>(CREATE_GAME, [user_id, name, maxPlayers]);
