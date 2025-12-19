@@ -23,7 +23,9 @@ import {
 
 import {
     initializePlayerActions,
-    updateActionButtons
+    updateActionButtons,
+    showActionFeedback,
+    resetActionState
 } from "./game/player-actions";
 
 // Get game ID from server-rendered data attribute
@@ -157,23 +159,20 @@ socket.on("river:revealed", (data: any) => {
 });
 
 /**
- * Handle betting action broadcast from HTTP routes
- * Server emits this after each POST /games/:id/:action
+ * Handle betting action (HTTP route path - kept for backwards compatibility)
  */
 socket.on("betting:action", (data: any) => {
     console.log("Betting action:", data);
 
-    // Use camelCase field names (matches backend betting.ts)
     if (data.newPot !== undefined) {
         updatePot(data.newPot);
     }
 
-    // Update fold status
     if (data.action === "fold" && data.userId !== undefined) {
         updatePlayerBet(data.userId, -1); // -1 = folded
     }
 
-    // Request full state sync to update all displays
+    // Request full state sync to keep all displays consistent
     socket.emit("game:requestState", { gameId });
 });
 
@@ -243,9 +242,10 @@ socket.on("game:state", (data: any) => {
  * Handle hand complete (showdown)
  */
 socket.on("hand:complete", (data: any) => {
-    // TODO: Show winner, hand results
     console.log("Hand complete:", data);
     updateHandStage("showdown");
+    showShowdownModal(data);
+    socket.emit("game:requestState", { gameId });
 });
 
 /**
@@ -311,6 +311,86 @@ function showGameOverModal(message: string): void {
     document.body.appendChild(overlay);
 }
 
+type ShowdownPayload = {
+    winners?: number[];
+    winningHand?: string;
+    potShare?: number;
+    payouts?: Array<{ userId: number; amount: number }>;
+    reason?: string;
+};
+
+function showShowdownModal(data: ShowdownPayload): void {
+    const existing = document.getElementById("showdown-overlay");
+    if (existing !== null) {
+        existing.remove();
+    }
+
+    const winnerIds = data.winners ?? [];
+    const winnerNames = winnerIds.map((userId) => {
+        const seat = document.querySelector<HTMLElement>(
+            `.player-seat[data-user-id="${userId}"] strong`
+        );
+        return seat?.textContent ?? `Player ${userId}`;
+    });
+
+    const winnersText = winnerNames.length > 0 ? winnerNames.join(", ") : "Unknown";
+    const handText = data.winningHand ?? "Unknown hand";
+    const shareText = data.potShare !== undefined ? `$${data.potShare}` : "Unknown";
+
+    const overlay = document.createElement("div");
+    overlay.id = "showdown-overlay";
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+    `;
+
+    const modal = document.createElement("div");
+    modal.style.cssText = `
+        background: white;
+        padding: 28px 40px;
+        border-radius: 14px;
+        text-align: center;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        max-width: 420px;
+        width: 90%;
+    `;
+
+    modal.innerHTML = `
+        <h2 style="margin: 0 0 12px; font-size: 22px;">Showdown</h2>
+        <p style="margin: 0 0 8px; font-size: 16px; color: #111;">Winner: ${winnersText}</p>
+        <p style="margin: 0 0 8px; font-size: 14px; color: #555;">Hand: ${handText}</p>
+        <p style="margin: 0 0 16px; font-size: 14px; color: #555;">Pot Share: ${shareText}</p>
+    `;
+
+    const closeButton = document.createElement("button");
+    closeButton.type = "button";
+    closeButton.textContent = "Close";
+    closeButton.style.cssText = `
+        padding: 10px 18px;
+        background: #1f2937;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+    `;
+    closeButton.addEventListener("click", () => {
+        overlay.remove();
+    });
+
+    modal.appendChild(closeButton);
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+}
+
 /**
  * Handle errors
  */
@@ -320,9 +400,23 @@ socket.on("error", (error: { message?: string }) => {
     alert(`Error: ${errorMessage}`);
 });
 
-// NOTE: action:confirmed and action:rejected were removed.
-// HTTP response status (200 vs 400) handles success/failure feedback.
-// See player-actions.ts handleFold/handleCheck/etc for error handling.
+/**
+ * Handle action confirmed by server
+ */
+socket.on("action:confirmed", (data: any) => {
+    console.log("Action confirmed:", data);
+    showActionFeedback(data.action, true);
+    resetActionState();
+});
+
+/**
+ * Handle action rejected by server
+ */
+socket.on("action:rejected", (data: any) => {
+    console.log("Action rejected:", data);
+    showActionFeedback(data.action, false);
+    resetActionState();
+});
 
 /**
  * Initialize when DOM ready
@@ -362,3 +456,15 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
+
+socket.on("connect", () => {
+    socket.emit("game:requestState", { gameId });
+});
+
+socket.on("game:state", (state) => {
+    console.log("GAME STATE (client):", state);
+
+    if (state.my_cards) {
+        updatePlayerHand(state.my_cards);
+    }
+});

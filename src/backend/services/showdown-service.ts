@@ -8,6 +8,7 @@ import db from "../db/connection";
 import * as CommunityCards from "../db/community-cards";
 import * as Games from "../db/games";
 import * as PlayerCards from "../db/player-cards";
+import type { DbClient } from "../db/games";
 import logger from "../lib/logger";
 import { determineWinners, evaluateHand, type PlayerHand } from "./hand-evaluator";
 
@@ -33,15 +34,16 @@ function calculatePayouts(pot: number, winnerIds: number[]): Array<{ userId: num
 }
 
 export async function runShowdown(gameId: number): Promise<ShowdownResult> {
-  return db.tx(async () => {
-    const game = await Games.get(gameId);
-    const communityCards = await CommunityCards.getCommunityCards(gameId);
+  return db.tx(async (tx) => {
+    const dbClient = tx as DbClient;
+    const game = await Games.get(gameId, dbClient);
+    const communityCards = await CommunityCards.getCommunityCards(gameId, dbClient);
 
     if (communityCards.length < 3) {
       throw new Error("Cannot run showdown without community cards on the table");
     }
 
-    const players = await Games.getPlayersWithStats(gameId);
+    const players = await Games.getPlayersWithStats(gameId, dbClient);
     const activePlayers = players.filter((p) => p.current_bet >= 0);
 
     if (activePlayers.length === 0) {
@@ -51,7 +53,7 @@ export async function runShowdown(gameId: number): Promise<ShowdownResult> {
     const playerHands: PlayerHand[] = [];
 
     for (const player of activePlayers) {
-      const holeCards = await PlayerCards.getPlayerCards(gameId, player.user_id);
+      const holeCards = await PlayerCards.getPlayerCards(gameId, player.user_id, dbClient);
 
       if (holeCards.length < 2) {
         throw new Error(`Player ${player.user_id} does not have 2 hole cards`);
@@ -67,15 +69,15 @@ export async function runShowdown(gameId: number): Promise<ShowdownResult> {
     const payouts = calculatePayouts(game.pot_money, winnerIds);
     for (const payout of payouts) {
       if (payout.amount > 0) {
-        await Games.addChips(gameId, payout.userId, payout.amount);
+        await Games.addChips(gameId, payout.userId, payout.amount, dbClient);
       }
     }
 
     if (game.pot_money > 0) {
-      await Games.addToPot(gameId, -game.pot_money);
+      await Games.addToPot(gameId, -game.pot_money, dbClient);
     }
 
-    await Games.endGame(gameId);
+    await Games.endGame(gameId, dbClient);
 
     logger.info(
       `Showdown complete for game ${gameId}. Winners: ${winnerIds.join(", ")}. Winning hand: ${winningHandDescr}.`

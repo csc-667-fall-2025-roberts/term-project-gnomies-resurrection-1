@@ -156,7 +156,7 @@ export const CHECK_ALL_BETS_EQUAL = `
 export const RESET_BETS = `
   UPDATE game_players
   SET bet_amount = 0
-  WHERE game_id = $1
+  WHERE game_id = $1 AND bet_amount >= 0
   RETURNING *
 `;
 
@@ -173,4 +173,3 @@ export const UPDATE_GAME_STATE = `
   SET state = $2
   WHERE id = $1
 `;
-

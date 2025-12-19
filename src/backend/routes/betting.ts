@@ -18,9 +18,17 @@
 
 import { Router, Request, Response } from "express";
 import { Server } from "socket.io";
+import {
+    BETTING_ACTION,
+    FLOP_REVEALED,
+    HAND_COMPLETE,
+    RIVER_REVEALED,
+    TURN_REVEALED,
+} from "../../shared/keys";
 import * as BettingService from "../services/betting-service";
 import * as RoundService from "../services/round-service";
 import * as Games from "../db/games";
+import { runShowdown } from "../services/showdown-service";
 import { requireGamePlayer } from "../middleware/gamePermissions";
 import logger from "../lib/logger";
 
@@ -47,26 +55,28 @@ async function checkAndAdvanceRound(io: Server | undefined, gameId: number): Pro
     switch (game.state) {
         case "pre-flop":
             dealResult = await RoundService.dealFlop(gameId);
-            io.to(roomName).emit("flop:revealed", dealResult);
+            io.to(roomName).emit(FLOP_REVEALED, dealResult);
             logger.info(`Game ${gameId}: Dealt flop`);
             break;
 
         case "flop":
             dealResult = await RoundService.dealTurn(gameId);
-            io.to(roomName).emit("turn:revealed", dealResult);
+            io.to(roomName).emit(TURN_REVEALED, dealResult);
             logger.info(`Game ${gameId}: Dealt turn`);
             break;
 
         case "turn":
             dealResult = await RoundService.dealRiver(gameId);
-            io.to(roomName).emit("river:revealed", dealResult);
+            io.to(roomName).emit(RIVER_REVEALED, dealResult);
             logger.info(`Game ${gameId}: Dealt river`);
             break;
 
         case "river":
-            // TODO: call showdown logic
-            io.to(roomName).emit("hand:complete", { reason: "showdown" });
-            logger.info(`Game ${gameId}: Hand complete, showdown`);
+            {
+                const showdown = await runShowdown(gameId);
+                io.to(roomName).emit(HAND_COMPLETE, { reason: "showdown", ...showdown });
+                logger.info(`Game ${gameId}: Hand complete, showdown`);
+            }
             break;
     }
 }
@@ -93,7 +103,7 @@ router.post(
             // Emit socket event to game room
             const io = req.app.get("io");
             if (io !== undefined) {
-                io.to(`game-${gameId}`).emit("betting:action", {
+                io.to(`game-${gameId}`).emit(BETTING_ACTION, {
                     userId,
                     action: "fold",
                     nextPlayerId: result.nextPlayerId,
@@ -134,7 +144,7 @@ router.post(
             // Emit socket event to game room
             const io = req.app.get("io");
             if (io !== undefined) {
-                io.to(`game-${gameId}`).emit("betting:action", {
+                io.to(`game-${gameId}`).emit(BETTING_ACTION, {
                     userId,
                     action: "check",
                     nextPlayerId: result.nextPlayerId,
@@ -175,7 +185,7 @@ router.post(
             // Emit socket event to game room
             const io = req.app.get("io");
             if (io !== undefined) {
-                io.to(`game-${gameId}`).emit("betting:action", {
+                io.to(`game-${gameId}`).emit(BETTING_ACTION, {
                     userId,
                     action: "call",
                     amount: result.amount,
@@ -227,7 +237,7 @@ router.post(
             // Emit socket event to game room
             const io = req.app.get("io");
             if (io !== undefined) {
-                io.to(`game-${gameId}`).emit("betting:action", {
+                io.to(`game-${gameId}`).emit(BETTING_ACTION, {
                     userId,
                     action: "raise",
                     amount: result.amount,
@@ -271,7 +281,7 @@ router.post(
             // Emit socket event to game room
             const io = req.app.get("io");
             if (io !== undefined) {
-                io.to(`game-${gameId}`).emit("betting:action", {
+                io.to(`game-${gameId}`).emit(BETTING_ACTION, {
                     userId,
                     action: "all-in",
                     amount: result.amount,

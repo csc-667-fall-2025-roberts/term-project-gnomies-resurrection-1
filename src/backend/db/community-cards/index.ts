@@ -13,6 +13,8 @@ import {
     GET_COMMUNITY_CARDS,
 } from "./sql";
 
+type DbClient = Pick<typeof db, "none" | "one" | "manyOrNone">;
+
 // Type for community card with details
 export type CommunityCard = {
     card_id: number;
@@ -26,9 +28,10 @@ export type CommunityCard = {
  */
 export const addCommunityCards = async (
     gameId: number,
-    cardIds: number[]
+    cardIds: number[],
+    dbClient: DbClient = db
 ): Promise<void> => {
-    await db.none(ADD_COMMUNITY_CARDS, [gameId, cardIds]);
+    await dbClient.none(ADD_COMMUNITY_CARDS, [gameId, cardIds]);
 };
 
 /**
@@ -36,16 +39,17 @@ export const addCommunityCards = async (
  * Returns cards in deal order (by card_id)
  */
 export const getCommunityCards = async (
-    gameId: number
+    gameId: number,
+    dbClient: DbClient = db
 ): Promise<CommunityCard[]> => {
-    return await db.manyOrNone<CommunityCard>(GET_COMMUNITY_CARDS, [gameId]);
+    return await dbClient.manyOrNone<CommunityCard>(GET_COMMUNITY_CARDS, [gameId]);
 };
 
 /**
  * Count current community cards (0, 3, 4, or 5)
  */
-export const countCommunityCards = async (gameId: number): Promise<number> => {
-    const result = await db.one<{ count: string }>(COUNT_COMMUNITY_CARDS, [
+export const countCommunityCards = async (gameId: number, dbClient: DbClient = db): Promise<number> => {
+    const result = await dbClient.one<{ count: string }>(COUNT_COMMUNITY_CARDS, [
         gameId,
     ]);
     return parseInt(result.count);
@@ -54,6 +58,6 @@ export const countCommunityCards = async (gameId: number): Promise<number> => {
 /**
  * Clear all community cards for a game (new hand reset)
  */
-export const clearCommunityCards = async (gameId: number): Promise<void> => {
-    await db.none(CLEAR_COMMUNITY_CARDS, [gameId]);
+export const clearCommunityCards = async (gameId: number, dbClient: DbClient = db): Promise<void> => {
+    await dbClient.none(CLEAR_COMMUNITY_CARDS, [gameId]);
 };

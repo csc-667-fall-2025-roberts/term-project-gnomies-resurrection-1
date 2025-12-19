@@ -11,7 +11,9 @@
  * - Uses explicit comparisons (professor's requirement)
  */
 
+import db from "../db/connection";
 import * as Games from "../db/games";
+import type { DbClient } from "../db/games";
 import logger from "../lib/logger";
 
 /**
@@ -31,8 +33,8 @@ export interface BettingResult {
  * Validate that it's the player's turn
  * @throws Error if not player's turn
  */
-export async function validateTurn(gameId: number, userId: number): Promise<void> {
-    const currentTurn = await Games.getCurrentTurn(gameId);
+async function validateTurnWithDb(dbClient: DbClient, gameId: number, userId: number): Promise<void> {
+    const currentTurn = await Games.getCurrentTurn(gameId, dbClient);
 
     if (currentTurn === null) {
         throw new Error("Game has not started");
@@ -43,12 +45,16 @@ export async function validateTurn(gameId: number, userId: number): Promise<void
     }
 }
 
+export async function validateTurn(gameId: number, userId: number): Promise<void> {
+    await validateTurnWithDb(db, gameId, userId);
+}
+
 /**
  * Get player's current chip count
  * @throws Error if player not found
  */
-async function getPlayerChips(gameId: number, userId: number): Promise<number> {
-    const players = await Games.getPlayersWithStats(gameId);
+async function getPlayerChips(dbClient: DbClient, gameId: number, userId: number): Promise<number> {
+    const players = await Games.getPlayersWithStats(gameId, dbClient);
     const player = players.find(p => p.user_id === userId);
 
     if (player === undefined) {
@@ -62,98 +68,110 @@ async function getPlayerChips(gameId: number, userId: number): Promise<number> {
  * Player folds - sets bet_amount to -1 to mark as folded
  */
 export async function fold(gameId: number, userId: number): Promise<BettingResult> {
-    // Validate turn
-    await validateTurn(gameId, userId);
+    return await db.tx(async (tx) => {
+        const dbClient = tx as DbClient;
 
-    // Mark player as folded (bet_amount = -1)
-    await Games.updatePlayerBet(gameId, userId, -1);
+        // Validate turn
+        await validateTurnWithDb(dbClient, gameId, userId);
 
-    // Advance to next player
-    const nextPlayerId = await Games.advanceTurn(gameId);
+        // Mark player as folded (bet_amount = -1)
+        await Games.updatePlayerBet(gameId, userId, -1, dbClient);
 
-    logger.info(`Player ${userId} folded in game ${gameId}`);
+        // Advance to next player
+        const nextPlayerId = await Games.advanceTurn(gameId, dbClient);
 
-    return {
-        success: true,
-        action: "fold",
-        nextPlayerId,
-    };
+        logger.info(`Player ${userId} folded in game ${gameId}`);
+
+        return {
+            success: true,
+            action: "fold",
+            nextPlayerId,
+        };
+    });
 }
 
 /**
  * Player checks - only valid if no bet to call
  */
 export async function check(gameId: number, userId: number): Promise<BettingResult> {
-    // Validate turn
-    await validateTurn(gameId, userId);
+    return await db.tx(async (tx) => {
+        const dbClient = tx as DbClient;
 
-    // Get current highest bet
-    const currentBet = await Games.getCurrentBet(gameId);
-    const playerBet = await Games.getPlayerBet(gameId, userId);
+        // Validate turn
+        await validateTurnWithDb(dbClient, gameId, userId);
 
-    // Can only check if player's bet matches current bet
-    if (currentBet > playerBet) {
-        throw new Error(`Cannot check - must call $${currentBet - playerBet}`);
-    }
+        // Get current highest bet
+        const currentBet = await Games.getCurrentBet(gameId, dbClient);
+        const playerBet = await Games.getPlayerBet(gameId, userId, dbClient);
 
-    // Advance to next player
-    const nextPlayerId = await Games.advanceTurn(gameId);
+        // Can only check if player's bet matches current bet
+        if (currentBet > playerBet) {
+            throw new Error(`Cannot check - must call $${currentBet - playerBet}`);
+        }
 
-    logger.info(`Player ${userId} checked in game ${gameId}`);
+        // Advance to next player
+        const nextPlayerId = await Games.advanceTurn(gameId, dbClient);
 
-    return {
-        success: true,
-        action: "check",
-        nextPlayerId,
-    };
+        logger.info(`Player ${userId} checked in game ${gameId}`);
+
+        return {
+            success: true,
+            action: "check",
+            nextPlayerId,
+        };
+    });
 }
 
 /**
  * Player calls - matches the current bet
  */
 export async function call(gameId: number, userId: number): Promise<BettingResult> {
-    // Validate turn
-    await validateTurn(gameId, userId);
+    return await db.tx(async (tx) => {
+        const dbClient = tx as DbClient;
 
-    // Get current highest bet and player's current bet
-    const currentBet = await Games.getCurrentBet(gameId);
-    const playerBet = await Games.getPlayerBet(gameId, userId);
+        // Validate turn
+        await validateTurnWithDb(dbClient, gameId, userId);
 
-    // Calculate amount needed to call
-    const callAmount = currentBet - playerBet;
+        // Get current highest bet and player's current bet
+        const currentBet = await Games.getCurrentBet(gameId, dbClient);
+        const playerBet = await Games.getPlayerBet(gameId, userId, dbClient);
 
-    if (callAmount <= 0) {
-        throw new Error("Nothing to call - use check instead");
-    }
+        // Calculate amount needed to call
+        const callAmount = currentBet - playerBet;
 
-    // Validate player has enough chips
-    const playerChips = await getPlayerChips(gameId, userId);
-    if (playerChips < callAmount) {
-        throw new Error(`Not enough chips to call. Have $${playerChips}, need $${callAmount}. Use all-in instead.`);
-    }
+        if (callAmount <= 0) {
+            throw new Error("Nothing to call - use check instead");
+        }
 
-    // Deduct chips from player
-    const newChips = await Games.deductChips(gameId, userId, callAmount);
+        // Validate player has enough chips
+        const playerChips = await getPlayerChips(dbClient, gameId, userId);
+        if (playerChips < callAmount) {
+            throw new Error(`Not enough chips to call. Have $${playerChips}, need $${callAmount}. Use all-in instead.`);
+        }
 
-    // Update player's bet to match current bet
-    await Games.updatePlayerBet(gameId, userId, currentBet);
+        // Deduct chips from player
+        const newChips = await Games.deductChips(gameId, userId, callAmount, dbClient);
 
-    // Add to pot
-    const newPot = await Games.addToPot(gameId, callAmount);
+        // Update player's bet to match current bet
+        await Games.updatePlayerBet(gameId, userId, currentBet, dbClient);
 
-    // Advance to next player
-    const nextPlayerId = await Games.advanceTurn(gameId);
+        // Add to pot
+        const newPot = await Games.addToPot(gameId, callAmount, dbClient);
 
-    logger.info(`Player ${userId} called $${callAmount} in game ${gameId}`);
+        // Advance to next player
+        const nextPlayerId = await Games.advanceTurn(gameId, dbClient);
 
-    return {
-        success: true,
-        action: "call",
-        amount: callAmount,
-        newPot,
-        newChips,
-        nextPlayerId,
-    };
+        logger.info(`Player ${userId} called $${callAmount} in game ${gameId}`);
+
+        return {
+            success: true,
+            action: "call",
+            amount: callAmount,
+            newPot,
+            newChips,
+            nextPlayerId,
+        };
+    });
 }
 
 /**
@@ -165,99 +183,107 @@ export async function raise(
     userId: number,
     raiseToAmount: number
 ): Promise<BettingResult> {
-    // Validate turn
-    await validateTurn(gameId, userId);
+    return await db.tx(async (tx) => {
+        const dbClient = tx as DbClient;
 
-    // Get current highest bet and player's current bet
-    const currentBet = await Games.getCurrentBet(gameId);
-    const playerBet = await Games.getPlayerBet(gameId, userId);
+        // Validate turn
+        await validateTurnWithDb(dbClient, gameId, userId);
 
-    // Validate raise amount (must be more than current bet)
-    if (raiseToAmount <= currentBet) {
-        throw new Error(`Raise must be more than current bet of $${currentBet}`);
-    }
+        // Get current highest bet and player's current bet
+        const currentBet = await Games.getCurrentBet(gameId, dbClient);
+        const playerBet = await Games.getPlayerBet(gameId, userId, dbClient);
 
-    // Calculate chips needed (difference from what player already bet)
-    const chipsNeeded = raiseToAmount - playerBet;
+        // Validate raise amount (must be more than current bet)
+        if (raiseToAmount <= currentBet) {
+            throw new Error(`Raise must be more than current bet of $${currentBet}`);
+        }
 
-    // Validate player has enough chips
-    const playerChips = await getPlayerChips(gameId, userId);
-    if (playerChips < chipsNeeded) {
-        throw new Error(`Not enough chips to raise. Have $${playerChips}, need $${chipsNeeded}. Use all-in instead.`);
-    }
+        // Calculate chips needed (difference from what player already bet)
+        const chipsNeeded = raiseToAmount - playerBet;
 
-    // Deduct chips from player
-    const newChips = await Games.deductChips(gameId, userId, chipsNeeded);
+        // Validate player has enough chips
+        const playerChips = await getPlayerChips(dbClient, gameId, userId);
+        if (playerChips < chipsNeeded) {
+            throw new Error(`Not enough chips to raise. Have $${playerChips}, need $${chipsNeeded}. Use all-in instead.`);
+        }
 
-    // Update player's bet
-    await Games.updatePlayerBet(gameId, userId, raiseToAmount);
+        // Deduct chips from player
+        const newChips = await Games.deductChips(gameId, userId, chipsNeeded, dbClient);
 
-    // Add to pot
-    const newPot = await Games.addToPot(gameId, chipsNeeded);
+        // Update player's bet
+        await Games.updatePlayerBet(gameId, userId, raiseToAmount, dbClient);
 
-    // Advance to next player
-    const nextPlayerId = await Games.advanceTurn(gameId);
+        // Add to pot
+        const newPot = await Games.addToPot(gameId, chipsNeeded, dbClient);
 
-    const raiseBy = raiseToAmount - currentBet;
-    logger.info(`Player ${userId} raised by $${raiseBy} to $${raiseToAmount} in game ${gameId}`);
+        // Advance to next player
+        const nextPlayerId = await Games.advanceTurn(gameId, dbClient);
 
-    return {
-        success: true,
-        action: "raise",
-        amount: raiseToAmount,
-        newPot,
-        newChips,
-        nextPlayerId,
-    };
+        const raiseBy = raiseToAmount - currentBet;
+        logger.info(`Player ${userId} raised by $${raiseBy} to $${raiseToAmount} in game ${gameId}`);
+
+        return {
+            success: true,
+            action: "raise",
+            amount: raiseToAmount,
+            newPot,
+            newChips,
+            nextPlayerId,
+        };
+    });
 }
 
 /**
  * Player goes all-in - bets all remaining chips
  */
 export async function allIn(gameId: number, userId: number): Promise<BettingResult> {
-    // Validate turn
-    await validateTurn(gameId, userId);
+    return await db.tx(async (tx) => {
+        const dbClient = tx as DbClient;
 
-    // Get player's current chips and bet
-    const players = await Games.getPlayersWithStats(gameId);
-    const player = players.find(p => p.user_id === userId);
+        // Validate turn
+        await validateTurnWithDb(dbClient, gameId, userId);
 
-    if (player === undefined) {
-        throw new Error("Player not found in game");
-    }
+        // Get player's current chips and bet
+        const players = await Games.getPlayersWithStats(gameId, dbClient);
+        const player = players.find(p => p.user_id === userId);
 
-    const remainingChips = player.chip_count;
-    const currentPlayerBet = player.current_bet;
+        if (player === undefined) {
+            throw new Error("Player not found in game");
+        }
 
-    if (remainingChips <= 0) {
-        throw new Error("No chips remaining to bet");
-    }
+        const remainingChips = player.chip_count;
+        const currentPlayerBet = player.current_bet;
 
-    // Total bet will be current bet + all remaining chips
-    const newBetAmount = currentPlayerBet + remainingChips;
+        if (remainingChips <= 0) {
+            throw new Error("No chips remaining to bet");
+        }
 
-    // Deduct all remaining chips
-    const newChips = await Games.deductChips(gameId, userId, remainingChips);
+        // Total bet will be current bet + all remaining chips
+        const newBetAmount = currentPlayerBet + remainingChips;
 
-    // Update player's bet
-    await Games.updatePlayerBet(gameId, userId, newBetAmount);
+        // Deduct all remaining chips
+        const newChips = await Games.deductChips(gameId, userId, remainingChips, dbClient);
 
-    // Add to pot
-    const newPot = await Games.addToPot(gameId, remainingChips);
+        // Update player's bet
+        await Games.updatePlayerBet(gameId, userId, newBetAmount, dbClient);
 
-    // Advance to next player
-    const nextPlayerId = await Games.advanceTurn(gameId);
+        // Add to pot
+        const newPot = await Games.addToPot(gameId, remainingChips, dbClient);
 
-    logger.info(`Player ${userId} went all-in with $${remainingChips} in game ${gameId}`);
+        // Advance to next player
+        const nextPlayerId = await Games.advanceTurn(gameId, dbClient);
 
-    return {
-        success: true,
-        action: "all-in",
-        amount: remainingChips,
-        newPot,
-        newChips,
-        nextPlayerId,
-    };
+        logger.info(`Player ${userId} went all-in with $${remainingChips} in game ${gameId}`);
+
+        return {
+            success: true,
+            action: "all-in",
+            amount: remainingChips,
+            newPot,
+            newChips,
+            nextPlayerId,
+        };
+    });
 }
 
 /**

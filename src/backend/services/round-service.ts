@@ -8,6 +8,7 @@ import db from "../db/connection";
 import * as Games from "../db/games";
 import * as PlayerCards from "../db/player-cards";
 import * as CommunityCards from "../db/community-cards";
+import type { DbClient } from "../db/games";
 import logger from "../lib/logger";
 
 // Check if betting round is complete
@@ -53,7 +54,8 @@ function dealCommunityCards(
   count: number
 ) {
   return db.tx(async (t) => {
-    const game = await Games.get(gameId);
+    const dbClient = t as DbClient;
+    const game = await Games.get(gameId, dbClient);
 
     if (game.state !== expectedState) {
       throw new Error(
@@ -62,23 +64,23 @@ function dealCommunityCards(
     }
 
     // Pull cards from deck (includes both player_card id and card_id)
-    const cards = await PlayerCards.getCardsFromDeck(gameId, count);
+    const cards = await PlayerCards.getCardsFromDeck(gameId, count, dbClient);
     if (cards.length !== count) {
       throw new Error("Deck exhausted while dealing community cards");
     }
 
     // Bulk insert community cards using new module
     const cardIds = cards.map(c => c.card_id);
-    await CommunityCards.addCommunityCards(gameId, cardIds);
+    await CommunityCards.addCommunityCards(gameId, cardIds, dbClient);
 
     // Advance game state
-    await Games.updateGameState(gameId, nextState);
+    await Games.updateGameState(gameId, nextState, dbClient);
 
     // Reset bets for new round
-    await Games.resetBets(gameId);
+    await Games.resetBets(gameId, dbClient);
 
     // Fetch full card details for socket payload
-    const communityCards = await CommunityCards.getCommunityCards(gameId);
+    const communityCards = await CommunityCards.getCommunityCards(gameId, dbClient);
 
     logger.info(
       `Game ${gameId}: advanced to ${nextState}, dealt ${count} card(s)`

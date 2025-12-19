@@ -8,6 +8,7 @@
 import db from "../db/connection";
 import * as Games from "../db/games";
 import * as PlayerCards from "../db/player-cards";
+import type { DbClient } from "../db/games";
 import logger from "../lib/logger";
 
 /**
@@ -31,8 +32,9 @@ import logger from "../lib/logger";
  */
 export async function startGame(gameId: number): Promise<{ firstPlayerId: number }> {
     return await db.tx(async (tx) => {
+      const dbClient = tx as DbClient;
       // 1. Get players and validate
-      const playerIds = await Games.getPlayerIds(gameId);
+      const playerIds = await Games.getPlayerIds(gameId, dbClient);
       if (playerIds.length < 2) {
         throw new Error("At least 2 players required to start poker game");
       }
@@ -41,21 +43,21 @@ export async function startGame(gameId: number): Promise<{ firstPlayerId: number
   
       // 2. Assign sequential positions (no shuffle)
       for (let i = 0; i < playerIds.length; i++) {
-        await Games.setPlayerPosition(gameId, playerIds[i], i + 1);
+        await Games.setPlayerPosition(gameId, playerIds[i], i + 1, dbClient);
       }
   
       // 3. Create shuffled deck (52 cards, randomized order)
-      await PlayerCards.createDeck(gameId);
+      await PlayerCards.createDeck(gameId, dbClient);
   
       // 4. Deal hole cards (round-robin, 2 passes)
       for (let pass = 0; pass < 2; pass++) {
         for (const playerId of playerIds) {
-          const cards = await PlayerCards.getCardsFromDeck(gameId, 1);
+          const cards = await PlayerCards.getCardsFromDeck(gameId, 1, dbClient);
           if (cards.length !== 1) {
             throw new Error("Deck exhausted while dealing hole cards");
           }
   
-          await PlayerCards.dealCards([cards[0].id], playerId);
+          await PlayerCards.dealCards([cards[0].id], playerId, dbClient);
         }
       }
   
@@ -68,7 +70,7 @@ export async function startGame(gameId: number): Promise<{ firstPlayerId: number
         playerIds.length > 2 ? playerIds[2] : playerIds[0];
   
       // 6. Transition game to pre-flop and set turn
-      await Games.start(gameId, firstPlayerId);
+      await Games.start(gameId, firstPlayerId, dbClient);
   
       logger.info(`Game ${gameId} started. First to act: user ${firstPlayerId}`);
   
