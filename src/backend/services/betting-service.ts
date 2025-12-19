@@ -77,6 +77,9 @@ export async function fold(gameId: number, userId: number): Promise<BettingResul
         // Mark player as folded (bet_amount = -1)
         await Games.updatePlayerBet(gameId, userId, -1, dbClient);
 
+        // Mark player as acted
+        await Games.markPlayerActed(gameId, userId, dbClient);
+
         // Advance to next player
         const nextPlayerId = await Games.advanceTurn(gameId, dbClient);
 
@@ -108,6 +111,9 @@ export async function check(gameId: number, userId: number): Promise<BettingResu
         if (currentBet > playerBet) {
             throw new Error(`Cannot check - must call $${currentBet - playerBet}`);
         }
+
+        // Mark player as acted
+        await Games.markPlayerActed(gameId, userId, dbClient);
 
         // Advance to next player
         const nextPlayerId = await Games.advanceTurn(gameId, dbClient);
@@ -154,6 +160,9 @@ export async function call(gameId: number, userId: number): Promise<BettingResul
 
         // Update player's bet to match current bet
         await Games.updatePlayerBet(gameId, userId, currentBet, dbClient);
+
+        // Mark player as acted
+        await Games.markPlayerActed(gameId, userId, dbClient);
 
         // Add to pot
         const newPot = await Games.addToPot(gameId, callAmount, dbClient);
@@ -212,6 +221,9 @@ export async function raise(
 
         // Update player's bet
         await Games.updatePlayerBet(gameId, userId, raiseToAmount, dbClient);
+
+        // Mark player as acted
+        await Games.markPlayerActed(gameId, userId, dbClient);
 
         // Add to pot
         const newPot = await Games.addToPot(gameId, chipsNeeded, dbClient);
@@ -286,9 +298,7 @@ export async function allIn(gameId: number, userId: number): Promise<BettingResu
     });
 }
 
-/**
- * Check if betting round is complete (all bets equal)
- */
+// DEPRECATED DELETE LATER
 export async function isBettingRoundComplete(gameId: number): Promise<boolean> {
     return await Games.areAllBetsEqual(gameId);
 }

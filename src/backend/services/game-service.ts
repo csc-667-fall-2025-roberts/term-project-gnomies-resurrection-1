@@ -128,6 +128,9 @@ export async function startGame(gameId: number): Promise<{ firstPlayerId: number
 
         logger.info(`Game ${gameId} started. First to act: user ${firstPlayerId}`);
 
+        // After blinds are posted and bets are set
+        await Games.resetHasActed(gameId, dbClient);
+
         return { firstPlayerId };
     });
 }

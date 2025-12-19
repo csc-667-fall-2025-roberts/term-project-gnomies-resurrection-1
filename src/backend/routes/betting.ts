@@ -24,15 +24,30 @@ import {
     HAND_COMPLETE,
     RIVER_REVEALED,
     TURN_REVEALED,
+    GAME_STATE,
 } from "../../shared/keys";
 import * as BettingService from "../services/betting-service";
 import * as RoundService from "../services/round-service";
 import * as Games from "../db/games";
+import * as CommunityCards from "../db/community-cards";
 import { runShowdown } from "../services/showdown-service";
 import { requireGamePlayer } from "../middleware/gamePermissions";
 import logger from "../lib/logger";
 
 const router = Router();
+
+async function broadcastFullState(io: Server, gameId: number) {
+    const game = await Games.get(gameId);
+    const players = await Games.getPlayersWithStats(gameId);
+    const communityCards = await CommunityCards.getCommunityCards(gameId);
+  
+    io.to(`game-${gameId}`).emit(GAME_STATE, {
+      ...game,
+      players,
+      community_cards: communityCards,
+    });
+  }
+  
 
 /**
  * Check if betting round is complete and advance to next round
@@ -43,10 +58,27 @@ async function checkAndAdvanceRound(io: Server | undefined, gameId: number): Pro
         return;
     }
 
+    // Debug logger
+    const players = await Games.getPlayersWithStats(gameId);
+    logger.info(
+        JSON.stringify(
+          players.map(p => ({
+            user: p.user_id,
+            bet: p.current_bet,
+            acted: p.has_acted
+          })),
+          null,
+          2
+        )
+      );  
+
     const isComplete = await RoundService.isBettingRoundComplete(gameId);
     if (!isComplete) {
         return;
     }
+
+    logger.info(`[ROUND CHECK RESULT] isComplete=${isComplete}`);
+
 
     const game = await Games.get(gameId);
     const roomName = `game-${gameId}`;
@@ -57,18 +89,21 @@ async function checkAndAdvanceRound(io: Server | undefined, gameId: number): Pro
             dealResult = await RoundService.dealFlop(gameId);
             io.to(roomName).emit(FLOP_REVEALED, dealResult);
             logger.info(`Game ${gameId}: Dealt flop`);
+            await broadcastFullState(io, gameId);
             break;
 
         case "flop":
             dealResult = await RoundService.dealTurn(gameId);
             io.to(roomName).emit(TURN_REVEALED, dealResult);
             logger.info(`Game ${gameId}: Dealt turn`);
+            await broadcastFullState(io, gameId);
             break;
 
         case "turn":
             dealResult = await RoundService.dealRiver(gameId);
             io.to(roomName).emit(RIVER_REVEALED, dealResult);
             logger.info(`Game ${gameId}: Dealt river`);
+            await broadcastFullState(io, gameId);
             break;
 
         case "river":
@@ -76,6 +111,7 @@ async function checkAndAdvanceRound(io: Server | undefined, gameId: number): Pro
                 const showdown = await runShowdown(gameId);
                 io.to(roomName).emit(HAND_COMPLETE, { reason: "showdown", ...showdown });
                 logger.info(`Game ${gameId}: Hand complete, showdown`);
+                await broadcastFullState(io, gameId);
             }
             break;
     }

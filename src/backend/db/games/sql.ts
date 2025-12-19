@@ -117,7 +117,8 @@ export const GET_PLAYERS_WITH_STATS = `
     gp.position,
     gp.player_money as chip_count,
     gp.bet_amount as current_bet,
-    gp.role
+    gp.role,
+    gp.has_acted
   FROM game_players gp
   JOIN users u ON gp.user_id = u.id
   WHERE gp.game_id = $1
@@ -163,7 +164,6 @@ export const RESET_BETS = `
   UPDATE game_players
   SET bet_amount = 0
   WHERE game_id = $1 AND bet_amount >= 0
-  RETURNING *
 `;
 
 // End game query - transitions to game-over state
@@ -179,3 +179,37 @@ export const UPDATE_GAME_STATE = `
   SET state = $2
   WHERE id = $1
 `;
+
+export const RESET_HAS_ACTED = `
+  UPDATE game_players
+  SET has_acted = false
+  WHERE game_id = $1
+`;
+
+export const MARK_PLAYER_ACTED = `
+  UPDATE game_players
+  SET has_acted = true
+  WHERE game_id = $1 AND user_id = $2
+`;
+
+export const COUNT_PLAYERS_IN_GAME = `
+  SELECT COUNT(*)::int AS count
+  FROM game_players
+  WHERE game_id = $1
+`;
+
+export const DELETE_COMMUNITY_CARDS = `
+  DELETE FROM community_cards
+  WHERE game_id = $1
+`;
+
+export const DELETE_GAME_PLAYERS = `
+  DELETE FROM game_players
+  WHERE game_id = $1
+`;
+
+export const DELETE_GAME = `
+  DELETE FROM games
+  WHERE id = $1
+`;
+

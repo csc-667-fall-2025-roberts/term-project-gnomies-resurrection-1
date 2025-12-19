@@ -11,6 +11,8 @@ import * as PlayerCards from "../db/player-cards";
 import type { DbClient } from "../db/games";
 import logger from "../lib/logger";
 import { determineWinners, evaluateHand, type PlayerHand } from "./hand-evaluator";
+import { scheduleGameCleanup } from "./game-cleanup"; // will call game-cleanup service at end
+
 
 export type ShowdownResult = {
   winners: number[];
@@ -78,6 +80,8 @@ export async function runShowdown(gameId: number): Promise<ShowdownResult> {
     }
 
     await Games.endGame(gameId, dbClient);
+
+    scheduleGameCleanup(gameId);
 
     logger.info(
       `Showdown complete for game ${gameId}. Winners: ${winnerIds.join(", ")}. Winning hand: ${winningHandDescr}.`

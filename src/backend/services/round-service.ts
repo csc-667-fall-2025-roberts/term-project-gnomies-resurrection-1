@@ -12,18 +12,20 @@ import type { DbClient } from "../db/games";
 import logger from "../lib/logger";
 
 // Check if betting round is complete
-// All non folded players must have equal bets
+// All non folded players must have equal bets that are != 0
 export async function isBettingRoundComplete(gameId: number): Promise<boolean> {
   const players = await Games.getPlayersWithStats(gameId);
+  const active = players.filter(p => p.current_bet >= 0);
 
-  const activePlayers = players.filter(p => p.current_bet >= 0);
+  if (active.length === 0) return true;
 
-  if (activePlayers.length === 0) {
-    return true;
-  }
+  // Everyone must have acted
+  if (!active.every(p => p.has_acted)) return false;
 
-  const targetBet = activePlayers[0].current_bet;
-  return activePlayers.every(p => p.current_bet === targetBet);
+  // Everyone must have matched the bet
+  const maxBet = Math.max(...active.map(p => p.current_bet));
+  return active.every(p => p.current_bet === maxBet);
+  
 }
 
 // Reset all player bets to zero
@@ -76,8 +78,12 @@ function dealCommunityCards(
     // Advance game state
     await Games.updateGameState(gameId, nextState, dbClient);
 
-    // Reset bets for new round
+    // Reset bets for new round 
     await Games.resetBets(gameId, dbClient);
+
+    // Reset everyone "has_acted" attribute
+    await Games.resetHasActed(gameId, dbClient);
+
 
     // Fetch full card details for socket payload
     const communityCards = await CommunityCards.getCommunityCards(gameId, dbClient);

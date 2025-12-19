@@ -30,7 +30,7 @@ import {
 
 export type DbClient = Pick<typeof db, "none" | "one" | "oneOrNone" | "manyOrNone">;
 
-// Type for player data with stats (used on game page)
+// Type for player data
 export type PlayerWithStats = {
   user_id: number;
   username: string;
@@ -39,6 +39,7 @@ export type PlayerWithStats = {
   chip_count: number;
   current_bet: number;
   role: string; // 'dealer', 'small_blind', 'big_blind', 'player'
+  has_acted: boolean;
 };
 
 export async function updateGameState(gameId: number, state: string, dbClient: DbClient = db) {
@@ -212,6 +213,43 @@ const areAllBetsEqual = async (gameId: number, dbClient: DbClient = db): Promise
 // Reset all player bets to 0 for a new betting round
 const resetBets = async (gameId: number, dbClient: DbClient = db) =>
   await dbClient.none(RESET_BETS, [gameId]);
+
+export async function resetHasActed(
+  gameId: number,
+  dbClient: DbClient = db
+) {
+  await dbClient.none(sql.RESET_HAS_ACTED, [gameId]);
+}
+
+export async function markPlayerActed(
+  gameId: number,
+  userId: number,
+  dbClient: DbClient = db
+) {
+  await dbClient.none(sql.MARK_PLAYER_ACTED, [gameId, userId]);
+}
+
+export async function countPlayers(
+  gameId: number,
+  dbClient: DbClient = db
+): Promise<number> {
+  const result = await dbClient.one<{ count: number }>(
+    sql.COUNT_PLAYERS_IN_GAME,
+    [gameId]
+  );
+  return result.count;
+}
+
+export async function deleteGameCompletely(
+  gameId: number,
+  dbClient: DbClient = db
+) {
+  await dbClient.none(sql.DELETE_COMMUNITY_CARDS, [gameId]);
+  await dbClient.none(sql.DELETE_GAME_PLAYERS, [gameId]);
+  await dbClient.none(sql.DELETE_GAME, [gameId]);
+}
+
+
 
 export {
   addChips,
