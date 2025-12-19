@@ -13,7 +13,7 @@ export const createDeck = async (gameId: number) =>
 
 // Get N cards from the top of the deck
 export const getCardsFromDeck = async (gameId: number, count: number) =>
-  await db.manyOrNone<{ id: number }>(GET_CARDS_FROM_DECK, [gameId, count]);
+  await db.manyOrNone<{ id: number; card_id: number }>(GET_CARDS_FROM_DECK, [gameId, count]);
 
 // Assign cards to a player
 export const dealCards = async (cardIds: number[], playerId: number) =>
@@ -33,4 +33,3 @@ export const countDeckCards = async (gameId: number): Promise<number> => {
   const result = await db.one<{ count: string }>(COUNT_DECK_CARDS, [gameId]);
   return parseInt(result.count);
 };
-

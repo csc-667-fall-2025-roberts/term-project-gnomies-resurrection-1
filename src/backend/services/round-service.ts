@@ -61,14 +61,14 @@ function dealCommunityCards(
       );
     }
 
-    // Pull cards from deck (IDs only)
+    // Pull cards from deck (includes both player_card id and card_id)
     const cards = await PlayerCards.getCardsFromDeck(gameId, count);
     if (cards.length !== count) {
       throw new Error("Deck exhausted while dealing community cards");
     }
 
     // Bulk insert community cards using new module
-    const cardIds = cards.map(c => c.id);
+    const cardIds = cards.map(c => c.card_id);
     await CommunityCards.addCommunityCards(gameId, cardIds);
 
     // Advance game state

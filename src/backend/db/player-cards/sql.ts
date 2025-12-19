@@ -6,10 +6,11 @@ SELECT $1, id, NULL, ROW_NUMBER() OVER (ORDER BY RANDOM())
 FROM cards
 `;
 
-// Fetch N undealt cards from the deck (top of deck)
 export const GET_CARDS_FROM_DECK = `
-SELECT id FROM player_cards
-WHERE game_id = $1 AND owner_player_id IS NULL
+SELECT id, card_id FROM player_cards
+WHERE game_id = $1 
+  AND owner_player_id IS NULL
+  AND card_id NOT IN (SELECT card_id FROM community_cards WHERE game_id = $1)
 ORDER BY position
 LIMIT $2
 `;
@@ -39,5 +40,7 @@ ORDER BY c.sort_order
 // Count remaining undealt cards in the deck
 export const COUNT_DECK_CARDS = `
 SELECT COUNT(*) FROM player_cards
-WHERE game_id = $1 AND owner_player_id IS NULL
+WHERE game_id = $1 
+  AND owner_player_id IS NULL
+  AND card_id NOT IN (SELECT card_id FROM community_cards WHERE game_id = $1)
 `;

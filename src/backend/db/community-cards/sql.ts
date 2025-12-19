@@ -16,8 +16,9 @@ export const GET_COMMUNITY_CARDS = `
 SELECT cc.card_id, c.rank, c.suit
 FROM community_cards cc
 JOIN cards c ON cc.card_id = c.id
+JOIN player_cards pc ON pc.game_id = cc.game_id AND pc.card_id = cc.card_id
 WHERE cc.game_id = $1
-ORDER BY cc.card_id
+ORDER BY pc.position
 `;
 
 // Count revealed community cards
