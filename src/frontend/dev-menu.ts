@@ -90,7 +90,7 @@ function createDevMenu() {
 
       <div class="dev-menu-section">
         <h4>Turn Timer</h4>
-        <button data-action="start-timer">Start Timer (30s)</button>
+        <button data-action="start-timer">Start Timer (60s)</button>
         <button data-action="stop-timer">Stop Timer</button>
         <button data-action="timer-warning">Set Warning (10s)</button>
         <button data-action="timer-danger">Set Danger (5s)</button>
@@ -354,7 +354,7 @@ function handleAction(action: string) {
 
         // Turn Timer
         case "start-timer":
-            startMockTimer(30);
+            startMockTimer(60);
             break;
 
         case "stop-timer":
@@ -688,7 +688,7 @@ function stopMockTimer(): void {
 
     if (timerEl !== null) {
         timerEl.classList.remove("turn-timer--active", "turn-timer--warning", "turn-timer--danger");
-        timerEl.textContent = "30s";
+        timerEl.textContent = "60s";
     }
 
     if (timerFill !== null) {

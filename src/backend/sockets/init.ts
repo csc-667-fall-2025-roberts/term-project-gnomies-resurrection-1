@@ -16,6 +16,7 @@ import { gameRoom, initGameSocket } from "./game-socket";
 import { sanitizeString } from "../utils/sanitize";
 import * as PlayerCards from "../db/player-cards";
 import * as CommunityCards from "../db/community-cards";
+import * as BettingService from "../services/betting-service";
 
 export const initSockets = (httpServer: HTTPServer) => {
   const io = new Server(httpServer);
@@ -54,6 +55,7 @@ export const initSockets = (httpServer: HTTPServer) => {
         const players = await Games.getPlayersWithStats(parsedGameId);
         const myCards = await PlayerCards.getPlayerCards(parsedGameId, session.user!.id);
         const communityCards = await CommunityCards.getCommunityCards(parsedGameId);
+        const availableActions = await BettingService.getAvailableActions(parsedGameId, session.user!.id);
 
         socket.emit(GAME_STATE, {
           ...game,
@@ -61,6 +63,7 @@ export const initSockets = (httpServer: HTTPServer) => {
           community_cards: communityCards,
           is_my_turn: game.current_turn_user_id === session.user!.id,
           my_cards: myCards,
+          ...availableActions,
         });
       } catch (error) {
         logger.error(`Error fetching game state for game ${gameId}:`, error);

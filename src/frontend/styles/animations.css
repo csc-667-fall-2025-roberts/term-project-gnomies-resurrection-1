@@ -567,7 +567,7 @@
 }
 
 .turn-timer-bar {
-  animation: turnTimer 30s linear forwards;
+  animation: turnTimer 60s linear forwards;
 }
 
 /* Dealer button */

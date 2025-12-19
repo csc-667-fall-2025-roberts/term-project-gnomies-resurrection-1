@@ -292,3 +292,51 @@ export async function allIn(gameId: number, userId: number): Promise<BettingResu
 export async function isBettingRoundComplete(gameId: number): Promise<boolean> {
     return await Games.areAllBetsEqual(gameId);
 }
+
+/**
+ * Get available betting actions for a player
+ * Purpose: Provide frontend with state for enabling/disabling buttons
+ */
+export async function getAvailableActions(gameId: number, userId: number) {
+    const currentBet = await Games.getCurrentBet(gameId);
+    const playerBet = await Games.getPlayerBet(gameId, userId);
+    const players = await Games.getPlayersWithStats(gameId);
+    const player = players.find(p => p.user_id === userId);
+
+    if (player === undefined) {
+        return {
+            can_check: false,
+            can_call: false,
+            call_amount: 0,
+            min_raise: 0,
+            max_raise: 0,
+            player_stack: 0
+        };
+    }
+
+    const playerChips = player.chip_count;
+    // callAmount logic: how much MORE I need to put in to match currentBet
+    // (currentBet - playerBet)
+    const callAmount = currentBet - playerBet;
+
+    // Can check if no (additional) bet to the pot
+    const canCheck = callAmount <= 0;
+
+    // Can call if there is a debt AND chips to pay it.
+    const canCall = callAmount > 0 && playerChips > 0;
+
+    // Min raise logic: simplified to 2x current bet or Big Blind (20)
+    const minRaise = currentBet > 0 ? currentBet * 2 : 20;
+
+    // Max raise is essentially players remaining stack
+    const maxRaise = playerChips;
+
+    return {
+        can_check: canCheck,
+        can_call: canCall,
+        call_amount: Math.max(0, callAmount),
+        min_raise: minRaise, // Ensures no NaN
+        max_raise: maxRaise,
+        player_stack: playerChips
+    };
+}

@@ -523,7 +523,7 @@ export function updateAvailableActions(
 
 // ==================== TURN TIMER ====================
 
-const TURN_TIMEOUT_MS = 30000; // 30 seconds
+const TURN_TIMEOUT_MS = 60000; // 60 seconds
 let turnTimer: ReturnType<typeof setInterval> | null = null;
 
 /**

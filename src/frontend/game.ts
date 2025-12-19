@@ -251,6 +251,30 @@ socket.on(GAME_STATE, (data: any) => {
         data.call_amount,
         data.min_raise
     );
+
+    // Enable/disable action buttons based on turn state
+    updateActionButtons(
+        data.is_my_turn,
+        data.can_check,
+        data.can_call,
+        data.call_amount,
+        data.min_raise,
+        data.max_raise || data.player_stack || 0
+    );
+
+    // Timer logic: start when it's my turn, clear when not
+    if (data.is_my_turn) {
+        startTurnTimer(async () => {
+            console.log("Turn timeout - auto-folding");
+            try {
+                await fetch(`/games/${gameId}/fold`, { method: "POST" });
+            } catch (error) {
+                console.error("Auto-fold failed:", error);
+            }
+        });
+    } else {
+        clearTurnTimer();
+    }
 });
 
 /**
@@ -451,17 +475,4 @@ document.addEventListener("DOMContentLoaded", () => {
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
     });
-});
-
-
-socket.on("connect", () => {
-    socket.emit(GAME_STATE_REQUEST, { gameId });
-});
-
-socket.on(GAME_STATE, (state) => {
-    console.log("GAME STATE (client):", state);
-
-    if (state.my_cards) {
-        updatePlayerHand(state.my_cards);
-    }
 });
