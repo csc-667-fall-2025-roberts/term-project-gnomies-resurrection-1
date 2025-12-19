@@ -1,18 +1,23 @@
 /**
  * Player Action Handlers for Poker
  * 
- * Purpose: Handle player betting interactions
+ * Purpose: Handle player betting interactions via HTTP POST
  * 
- * PRINCIPLES:
- * - Track state locally
- * - Export getters for state
- * - Pass callbacks for server communication
- * - Use event delegation for dynamic content
+ * ARCHITECTURE:
+ * - Client sends changes via HTTP POST (this file)
+ * - Server pushes updates via WebSockets (game.ts listeners)
+ * - Server is sole source of truth
+ * 
+ * All betting actions POST to /games/:id/:action routes.
+ * Server handles DB updates and broadcasts socket events.
  */
 
 import type { BettingAction } from "./types";
 import { validateRaise, formatChips } from "./betting";
 import { clearTurnTimer } from "./ui-updates";
+
+// Get game ID from server-rendered data attribute
+const gameId = document.body.dataset.gameId || "";
 
 // Track current betting state
 let currentAction: BettingAction | null = null;
@@ -26,21 +31,13 @@ let checkBtn: HTMLButtonElement | null = null;
 let callBtn: HTMLButtonElement | null = null;
 let raiseBtn: HTMLButtonElement | null = null;
 let raiseInput: HTMLInputElement | null = null;
-let allInBtn: HTMLButtonElement | null = null; // not added as of Dec 18th
-
-
-// Callback type for action handlers
-type ActionCallback = (action: BettingAction, amount?: number) => void;
-
-// Store the callback for emitting actions
-let onActionCallback: ActionCallback | null = null;
+let allInBtn: HTMLButtonElement | null = null;
 
 /**
  * Initialize betting action buttons
- * @param onAction - Callback function when player takes an action
+ * No callback needed - handlers POST directly via fetch()
  */
-export function initializePlayerActions(onAction: ActionCallback): void {
-    onActionCallback = onAction;
+export function initializePlayerActions(): void {
 
     foldBtn = document.querySelector<HTMLButtonElement>(".btn-fold");
     checkBtn = document.querySelector<HTMLButtonElement>(".btn-check");
@@ -88,45 +85,84 @@ export function initializePlayerActions(onAction: ActionCallback): void {
 }
 
 /**
- * Handle fold action
+ * Handle fold action via HTTP POST
  */
-function handleFold(): void {
+async function handleFold(): Promise<void> {
     currentAction = "fold";
     disableAllActions();
 
-    if (onActionCallback !== null) {
-        onActionCallback("fold");
+    try {
+        const response = await fetch(`/games/${gameId}/fold`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" }
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || "Fold failed");
+        }
+
+        console.log("Fold action sent successfully");
+    } catch (error) {
+        console.error("Fold error:", error);
+        enableAllActions();
     }
 }
 
 /**
- * Handle check action
+ * Handle check action via HTTP POST
  */
-function handleCheck(): void {
+async function handleCheck(): Promise<void> {
     currentAction = "check";
     disableAllActions();
 
-    if (onActionCallback !== null) {
-        onActionCallback("check");
+    try {
+        const response = await fetch(`/games/${gameId}/check`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" }
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || "Check failed");
+        }
+
+        console.log("Check action sent successfully");
+    } catch (error) {
+        console.error("Check error:", error);
+        enableAllActions();
     }
 }
 
 /**
- * Handle call action
+ * Handle call action via HTTP POST
  */
-function handleCall(): void {
+async function handleCall(): Promise<void> {
     currentAction = "call";
     disableAllActions();
 
-    if (onActionCallback !== null) {
-        onActionCallback("call");
+    try {
+        const response = await fetch(`/games/${gameId}/call`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" }
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || "Call failed");
+        }
+
+        console.log("Call action sent successfully");
+    } catch (error) {
+        console.error("Call error:", error);
+        enableAllActions();
     }
 }
 
 /**
- * Handle raise action
+ * Handle raise action via HTTP POST
  */
-function handleRaise(): void {
+async function handleRaise(): Promise<void> {
     if (raiseInput === null) {
         return;
     }
@@ -144,20 +180,47 @@ function handleRaise(): void {
     raiseAmount = amount;
     disableAllActions();
 
-    if (onActionCallback !== null) {
-        onActionCallback("raise", amount);
+    try {
+        const response = await fetch(`/games/${gameId}/raise`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ amount })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || "Raise failed");
+        }
+
+        console.log("Raise action sent successfully");
+    } catch (error) {
+        console.error("Raise error:", error);
+        enableAllActions();
     }
 }
 
 /**
- * Handle all-in action
+ * Handle all-in action via HTTP POST
  */
-function handleAllIn(): void {
+async function handleAllIn(): Promise<void> {
     currentAction = "all-in";
     disableAllActions();
 
-    if (onActionCallback !== null) {
-        onActionCallback("all-in");
+    try {
+        const response = await fetch(`/games/${gameId}/all-in`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" }
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || "All-in failed");
+        }
+
+        console.log("All-in action sent successfully");
+    } catch (error) {
+        console.error("All-in error:", error);
+        enableAllActions();
     }
 }
 

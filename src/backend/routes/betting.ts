@@ -4,6 +4,10 @@
  * API endpoints for poker betting actions.
  * All routes require authentication and validate player is in game.
  * 
+ * - Client sends changes via HTTP POST (these routes)
+ * - Server pushes updates via WebSockets (socket broadcasts after DB updates)
+ * - Server is sole source of truth
+ * 
  * Routes:
  * - POST /games/:id/fold
  * - POST /games/:id/check
@@ -13,11 +17,59 @@
  */
 
 import { Router, Request, Response } from "express";
+import { Server } from "socket.io";
 import * as BettingService from "../services/betting-service";
+import * as RoundService from "../services/round-service";
+import * as Games from "../db/games";
 import { requireGamePlayer } from "../middleware/gamePermissions";
 import logger from "../lib/logger";
 
 const router = Router();
+
+/**
+ * Check if betting round is complete and advance to next round
+ * This is called after every betting action
+ */
+async function checkAndAdvanceRound(io: Server | undefined, gameId: number): Promise<void> {
+    if (io === undefined) {
+        return;
+    }
+
+    const isComplete = await RoundService.isBettingRoundComplete(gameId);
+    if (!isComplete) {
+        return;
+    }
+
+    const game = await Games.get(gameId);
+    const roomName = `game-${gameId}`;
+    let dealResult;
+
+    switch (game.state) {
+        case "pre-flop":
+            dealResult = await RoundService.dealFlop(gameId);
+            io.to(roomName).emit("flop:revealed", dealResult);
+            logger.info(`Game ${gameId}: Dealt flop`);
+            break;
+
+        case "flop":
+            dealResult = await RoundService.dealTurn(gameId);
+            io.to(roomName).emit("turn:revealed", dealResult);
+            logger.info(`Game ${gameId}: Dealt turn`);
+            break;
+
+        case "turn":
+            dealResult = await RoundService.dealRiver(gameId);
+            io.to(roomName).emit("river:revealed", dealResult);
+            logger.info(`Game ${gameId}: Dealt river`);
+            break;
+
+        case "river":
+            // TODO: call showdown logic
+            io.to(roomName).emit("hand:complete", { reason: "showdown" });
+            logger.info(`Game ${gameId}: Hand complete, showdown`);
+            break;
+    }
+}
 
 /**
  * POST /games/:id/fold
@@ -47,6 +99,9 @@ router.post(
                     nextPlayerId: result.nextPlayerId,
                 });
             }
+
+            // Check if betting round is complete and advance
+            await checkAndAdvanceRound(io, gameId);
 
             res.json(result);
         } catch (error) {
@@ -85,6 +140,9 @@ router.post(
                     nextPlayerId: result.nextPlayerId,
                 });
             }
+
+            // Check if betting round is complete and advance
+            await checkAndAdvanceRound(io, gameId);
 
             res.json(result);
         } catch (error) {
@@ -126,6 +184,9 @@ router.post(
                     nextPlayerId: result.nextPlayerId,
                 });
             }
+
+            // Check if betting round is complete and advance
+            await checkAndAdvanceRound(io, gameId);
 
             res.json(result);
         } catch (error) {
@@ -176,6 +237,9 @@ router.post(
                 });
             }
 
+            // Check if betting round is complete and advance
+            await checkAndAdvanceRound(io, gameId);
+
             res.json(result);
         } catch (error) {
             const message = error instanceof Error ? error.message : "Raise failed";
@@ -216,6 +280,9 @@ router.post(
                     nextPlayerId: result.nextPlayerId,
                 });
             }
+
+            // Check if betting round is complete and advance
+            await checkAndAdvanceRound(io, gameId);
 
             res.json(result);
         } catch (error) {

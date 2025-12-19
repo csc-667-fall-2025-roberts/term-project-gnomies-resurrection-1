@@ -5,7 +5,7 @@
  */
 
 import socketIo from "socket.io-client";
-import type { GameStateUpdate, BettingAction } from "./game/types";
+import type { GameStateUpdate } from "./game/types";
 import {
     updatePot,
     updateCommunityCards,
@@ -23,9 +23,7 @@ import {
 
 import {
     initializePlayerActions,
-    updateActionButtons,
-    showActionFeedback,
-    resetActionState
+    updateActionButtons
 } from "./game/player-actions";
 
 // Get game ID from server-rendered data attribute
@@ -159,42 +157,23 @@ socket.on("river:revealed", (data: any) => {
 });
 
 /**
- * Handle betting action (HTTP route path - kept for backwards compatibility)
+ * Handle betting action broadcast from HTTP routes
+ * Server emits this after each POST /games/:id/:action
  */
 socket.on("betting:action", (data: any) => {
-    console.log("Betting action (HTTP):", data);
+    console.log("Betting action:", data);
 
-    if (data.new_pot !== undefined) {
-        updatePot(data.new_pot);
-    }
-    if (data.players !== undefined) {
-        updatePlayerSeats(data.players);
-    }
-    setActiveTurn(data.is_my_turn, data.current_turn_user_id);
-});
-
-/**
- * Handle player action taken (Socket handler path - active path)
- * This is the primary event for betting updates
- */
-socket.on("player:actionTaken", (data: any) => {
-    console.log("Player action taken:", data);
-
-    const { userId, action, newPot } = data;
-
-    // Update pot if provided
-    if (newPot !== undefined) {
-        updatePot(newPot);
+    // Use camelCase field names (matches backend betting.ts)
+    if (data.newPot !== undefined) {
+        updatePot(data.newPot);
     }
 
-    // Update the player's bet display based on action
-    if (action === "fold") {
-        updatePlayerBet(userId, -1); // -1 = folded
+    // Update fold status
+    if (data.action === "fold" && data.userId !== undefined) {
+        updatePlayerBet(data.userId, -1); // -1 = folded
     }
-    // For other actions (check, call, raise, all-in), 
-    // the game:state response will update all bet displays
 
-    // Request full state sync to ensure UI is consistent
+    // Request full state sync to update all displays
     socket.emit("game:requestState", { gameId });
 });
 
@@ -225,13 +204,14 @@ socket.on("turn:changed", (data: any) => {
 
     // Timer logic: start when it's my turn, clear when not
     if (data.is_my_turn) {
-        startTurnTimer(() => {
-            // Auto-fold on timeout
+        startTurnTimer(async () => {
+            // Auto-fold on timeout via HTTP POST
             console.log("Turn timeout - auto-folding");
-            socket.emit("player:action", {
-                gameId,
-                action: "fold"
-            });
+            try {
+                await fetch(`/games/${gameId}/fold`, { method: "POST" });
+            } catch (error) {
+                console.error("Auto-fold failed:", error);
+            }
         });
     } else {
         clearTurnTimer();
@@ -340,37 +320,9 @@ socket.on("error", (error: { message?: string }) => {
     alert(`Error: ${errorMessage}`);
 });
 
-/**
- * Handle action confirmed by server
- */
-socket.on("action:confirmed", (data: any) => {
-    console.log("Action confirmed:", data);
-    showActionFeedback(data.action, true);
-    resetActionState();
-});
-
-/**
- * Handle action rejected by server
- */
-socket.on("action:rejected", (data: any) => {
-    console.log("Action rejected:", data);
-    showActionFeedback(data.action, false);
-    resetActionState();
-});
-
-/**
- * Send player action to server
- * @param action - The betting action to take
- * @param amount - Optional amount for raise/bet
- */
-function sendPlayerAction(action: BettingAction, amount?: number): void {
-    console.log("Sending action:", action, amount);
-    socket.emit("player:action", {
-        gameId,
-        action,
-        amount: amount || 0
-    });
-}
+// NOTE: action:confirmed and action:rejected were removed.
+// HTTP response status (200 vs 400) handles success/failure feedback.
+// See player-actions.ts handleFold/handleCheck/etc for error handling.
 
 /**
  * Initialize when DOM ready
@@ -378,8 +330,8 @@ function sendPlayerAction(action: BettingAction, amount?: number): void {
 document.addEventListener("DOMContentLoaded", () => {
     console.log("Game page initialized");
 
-    // Initialize player actions with callback to send actions to server
-    initializePlayerActions(sendPlayerAction);
+    // Initialize player actions - no callback needed, handlers POST directly
+    initializePlayerActions();
 
     // Request initial game state
     socket.emit("game:requestState", { gameId });
@@ -410,15 +362,3 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-
-socket.on("connect", () => {
-    socket.emit("game:requestState", { gameId });
-});
-
-socket.on("game:state", (state) => {
-    console.log("GAME STATE (client):", state);
-
-    if (state.my_cards) {
-        updatePlayerHand(state.my_cards);
-    }
-});

@@ -137,21 +137,21 @@ Database migrations include:
 **Create:** `src/backend/services/round-service.ts`
 
 **Functions needed:**
-- [ ] dealFlop(gameId) - deals 3 cards, updates state to "flop", resets bets
-- [ ] dealTurn(gameId) - deals 1 card, updates state to "turn", resets bets
-- [ ] dealRiver(gameId) - deals 1 card, updates state to "river", resets bets
-- [ ] isBettingRoundComplete(gameId) - checks if all bets are equal
+- [x] dealFlop(gameId) - deals 3 cards, updates state to "flop", resets bets
+- [x] dealTurn(gameId) - deals 1 card, updates state to "turn", resets bets
+- [x] dealRiver(gameId) - deals 1 card, updates state to "river", resets bets
+- [x] isBettingRoundComplete(gameId) - checks if all bets are equal
 
 **Each deal function must:**
-- [ ] Validate current game state allows the transition
-- [ ] Get appropriate number of cards from deck
-- [ ] Add cards to community_cards table
-- [ ] Update game state in games table
-- [ ] Reset all player bet_amounts to 0
-- [ ] Return dealt card details
+- [x] Validate current game state allows the transition
+- [x] Get appropriate number of cards from deck
+- [x] Add cards to community_cards table
+- [x] Update game state in games table
+- [x] Reset all player bet_amounts to 0
+- [x] Return dealt card details
 
 **Add to games/sql.ts:**
-- [ ] UPDATE_GAME_STATE query to change state column
+- [x] UPDATE_GAME_STATE query to change state column
 
 **Testing:**
 - [ ] Flop correctly deals 3 cards
@@ -166,17 +166,17 @@ Database migrations include:
 **Modify:** `src/frontend/game/ui-updates.ts`
 
 **Functions needed:**
-- [ ] updateCommunityCards(cards[]) - renders cards with animation
-- [ ] Apply dealing animation to each card
-- [ ] Update game state badge when rounds advance
+- [x] updateCommunityCards(cards[]) - renders cards with animation
+- [x] Apply dealing animation to each card
+- [x] Update game state badge when rounds advance
 
 **Modify:** `src/frontend/game.ts`
 
 **Socket events:**
-- [ ] Listen for ROUND_ADVANCED event
-- [ ] Update game state badge text and CSS class
-- [ ] Call updateCommunityCards with new cards
-- [ ] Update pot display
+- [x] Listen for ROUND_ADVANCED event
+- [x] Update game state badge text and CSS class
+- [x] Call updateCommunityCards with new cards
+- [x] Update pot display
 
 **Testing:**
 - [ ] Community cards appear when flop/turn/river dealt
@@ -186,6 +186,27 @@ Database migrations include:
 ---
 
 ## Phase 3: Betting Logic
+
+**Transport decision (aligns with professor classnote ):**
+- Client actions = HTTP POST only (fold/call/raise/check/all-in/start/advance)
+- Server processes, updates DB, then broadcasts via WebSockets
+- Server is source of truth; client holds no authoritative state
+
+### Transport Architecture
+
+**Client → Server (HTTP POST):**
+- All betting actions via `src/backend/routes/betting.ts`
+- Routes: `/games/:id/fold`, `/check`, `/call`, `/raise`, `/all-in`
+- Frontend uses `fetch()` in `src/frontend/game/player-actions.ts`
+
+**Server → Client (WebSocket broadcasts):**
+- `betting:action` - after any betting action
+- `flop:revealed`, `turn:revealed`, `river:revealed` - community cards
+- `hand:complete` - showdown trigger
+- `game:state` - full state sync on request
+
+**No socket-originated actions:** Client actions MUST go through HTTP routes.
+Socket listeners are for server→client broadcasts only (betting:action, flop:revealed, etc.).
 
 ### Task B1: Betting Queries [Bao] COMPLETE
 **Modify:**
@@ -246,7 +267,7 @@ Database migrations include:
 **Each route must:**
 - [x] Extract gameId from params and userId from session
 - [x] Call corresponding service function with proper error handling
-- [x] Emit betting:action socket event to game room
+- [x] Emit betting:action socket event to game room (server broadcast after HTTP)
 - [x] Return JSON success or error response
 - [x] Log errors with logger
 
@@ -268,38 +289,40 @@ Database migrations include:
 **Modify:** `src/frontend/game/betting.ts`
 
 **Functions to implement:**
-- [ ] handleFold() - POST to /games/:id/fold
-- [ ] handleCall() - POST to /games/:id/call
-- [ ] handleRaise() - validates amount, POST to /games/:id/raise with JSON body
-- [ ] disableAllActions() - disables all action buttons after action taken
+- [x] handleFold() - POST /games/:id/fold via fetch ✓
+- [x] handleCall() - POST /games/:id/call via fetch ✓  
+- [x] handleRaise() - POST /games/:id/raise via fetch ✓
+- [x] handleCheck() - POST /games/:id/check via fetch ✓
+- [x] handleAllIn() - POST /games/:id/all-in via fetch ✓
+- [x] disableAllActions() - Shared helper ✓
 
 **Setup event listeners:**
-- [ ] Attach click handlers to fold, call, raise buttons on DOMContentLoaded
-- [ ] Read gameId from document.body.dataset.gameId
-- [ ] Show error alerts on fetch failures
-- [ ] Disable buttons immediately after successful action
+- [x] Attach click handlers to fold, call, raise buttons on DOMContentLoaded ✓
+- [x] Read gameId from document.body.dataset.gameId ✓
+- [x] Show error alerts on fetch failures ✓
+- [x] Disable buttons immediately after successful action ✓
 
 **Modify:** `src/frontend/game/ui-updates.ts`
 
 **Functions needed:**
-- [ ] updatePot(amount) - updates pot display text
-- [ ] setActiveTurn(userId) - adds/removes active-turn class on seats
-- [ ] updatePlayerBet(userId, amount) - updates player's bet display
+- [x] updatePot(amount) - updates pot display with animation and delta
+- [x] setActiveTurn(userId) - adds/removes active-turn class with fade transitions
+- [x] updatePlayerBet(userId, amount) - updates player's bet display with folded/all-in states
 
 **Modify:** `src/frontend/game.ts`
 
 **Socket events:**
-- [ ] Listen for PLAYER_ACTION event
+- [ ] Listen for betting:action event (server broadcast after HTTP routes)
 - [ ] Mark seat as folded if action is fold
 - [ ] Request fresh game state after action
-- [ ] Listen for BET_UPDATE event
 - [ ] Update bet displays and pot for all players
 
 **Testing:**
-- [ ] Betting buttons functional
-- [ ] Pot updates in real-time
-- [ ] Turn indicators show correctly
-- [ ] Player bet amounts display correctly
+- [ ] Betting buttons functional (manual test needed)
+- [ ] Pot updates in real-time (manual test needed)
+- [ ] Turn indicators show correctly (manual test needed)
+- [ ] Player bet amounts display correctly (manual test needed)
+
 
 ---
 
@@ -308,19 +331,11 @@ Database migrations include:
 ### Task C2: Hand Evaluator
 **Create:** `src/backend/services/hand-evaluator.ts`
 
-**Install dependency:**
-- [ ] Run: npm install pokersolver
-- [ ] Run: npm install --save-dev @types/pokersolver
-
-**Functions to implement:**
-- [ ] evaluateHand(holeCards, communityCards) - converts to pokersolver format and solves
-- [ ] compareHands(hand1, hand2) - returns 1, 0, or -1 for comparison
-- [ ] determineWinners(playerHands[]) - finds best hand(s) and returns winner userId(s)
-
-**Card format conversion:**
-- [ ] Convert database cards to pokersolver strings like "Ah", "Kd"
-- [ ] Combine hole cards and community cards for evaluation
-- [ ] Handle ties by tracking multiple winners
+**Implementation (no external deps):**
+- [x] Convert DB cards (rank/suit) into solver-friendly values (A/K/Q/J/10→T/9...2; suits h/d/c/s)
+- [x] Evaluate 7-card hands in-house (straight flush → four of a kind → full house → flush → straight → trips → two pair → pair → high card)
+- [x] Produce comparable strength tuples for fast compare
+- [x] Return winner userId(s) and support ties
 
 ---
 
@@ -328,23 +343,23 @@ Database migrations include:
 **Create:** `src/backend/services/showdown-service.ts`
 
 **Function to implement:**
-- [ ] runShowdown(gameId) - full showdown process
+- [x] runShowdown(gameId) - full showdown process
 
 **Showdown steps:**
-- [ ] Fetch all community cards from database
-- [ ] Get all active players (bet_amount >= 0, not folded)
-- [ ] For each active player, get hole cards and evaluate hand
-- [ ] Determine winner(s) using hand evaluator
-- [ ] Calculate pot share (divide evenly if tie)
-- [ ] Add pot share to each winner's chips
-- [ ] Update game state to "game-over"
-- [ ] Return winners, winning hand description, and pot share
+- [x] Fetch all community cards from database
+- [x] Get all active players (bet_amount >= 0, not folded)
+- [x] For each active player, get hole cards and evaluate hand
+- [x] Determine winner(s) using hand evaluator
+- [x] Calculate pot share (split evenly; odd chips to earliest winner)
+- [x] Add pot share to each winner's chips and zero the pot
+- [x] Update game state to "game-over"
+- [x] Return winners, winning hand description, and pot share
 
 **Testing:**
-- [ ] Showdown evaluates hands correctly
-- [ ] Winners properly determined
-- [ ] Pot distributed to winner(s)
-- [ ] Ties handled with split pot
+- [x] Showdown evaluates hands correctly
+- [x] Winners properly determined
+- [x] Pot distributed to winner(s)
+- [x] Ties handled with split pot
 
 ---
 
@@ -374,7 +389,7 @@ Database migrations include:
 - Professor's `services/game-service.ts` for service layer pattern
 
 **Phase 4 (Winner):**
-- pokersolver npm package documentation
+- In-repo evaluator logic in `src/backend/services/hand-evaluator.ts`
 - Texas Hold'em rules at pokernews.com/poker-rules
 
 **Frontend Tasks:**

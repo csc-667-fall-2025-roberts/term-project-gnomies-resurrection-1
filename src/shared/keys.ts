@@ -20,8 +20,7 @@ export const FLOP_REVEALED = "flop:revealed";
 export const TURN_REVEALED = "turn:revealed";
 export const RIVER_REVEALED = "river:revealed";
 
-// Betting/player action events
-export const PLAYER_ACTION = "player:action"; // Client → Server
-export const PLAYER_ACTION_TAKEN = "player:actionTaken"; // Server → Clients (broadcast)
-export const ACTION_CONFIRMED = "action:confirmed"; // Server → Client (targeting acting player)
-export const ACTION_REJECTED = "action:rejected"; // Server → Client (targeting acting player)
+// Betting action broadcast (Server → Clients after HTTP POST)
+// NOTE: Client actions go via HTTP POST /games/:id/:action, NOT sockets
+export const BETTING_ACTION = "betting:action";
+export const HAND_COMPLETE = "hand:complete";
