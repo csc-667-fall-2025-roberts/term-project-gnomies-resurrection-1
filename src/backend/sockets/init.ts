@@ -8,6 +8,7 @@ import logger from "../lib/logger";
 import { gameRoom, initGameSocket } from "./game-socket";
 import { sanitizeString } from "../utils/sanitize";
 import * as PlayerCards from "../db/player-cards";
+import * as CommunityCards from "../db/community-cards";
 import * as RoundService from "../services/round-service";
 
 
@@ -40,7 +41,7 @@ export const initSockets = (httpServer: HTTPServer) => {
         logger.error(`Failed to join game room for user ${session.user!.id}:`, error);
       });
     }
-      
+
 
     // Handle game state request - return full game state to requesting client
     socket.on("game:requestState", async ({ gameId }: { gameId: string | number }) => {
@@ -49,11 +50,12 @@ export const initSockets = (httpServer: HTTPServer) => {
         const game = await Games.get(parsedGameId);
         const players = await Games.getPlayersWithStats(parsedGameId);
         const myCards = await PlayerCards.getPlayerCards(parsedGameId, session.user!.id);
-
+        const communityCards = await CommunityCards.getCommunityCards(parsedGameId);
 
         socket.emit("game:state", {
           ...game,
           players,
+          community_cards: communityCards,
           is_my_turn: game.current_turn_user_id === session.user!.id,
           my_cards: myCards,
         });
@@ -157,42 +159,42 @@ export const initSockets = (httpServer: HTTPServer) => {
           if (await Games.areAllBetsEqual(data.gameId)) {
             console.log("Betting round complete (check)");
 
-          // After advancing the turn
-          const isComplete = await RoundService.isBettingRoundComplete(data.gameId);
+            // After advancing the turn
+            const isComplete = await RoundService.isBettingRoundComplete(data.gameId);
 
-          if (isComplete) {
-            const updatedGame = await Games.get(data.gameId);
+            if (isComplete) {
+              const updatedGame = await Games.get(data.gameId);
 
-            let dealResult;
+              let dealResult;
 
-            switch (updatedGame.state) {
-              case "pre-flop":
-                dealResult = await RoundService.dealFlop(data.gameId);
-                io.to(roomName).emit("flop:revealed", dealResult);
-                break;
+              switch (updatedGame.state) {
+                case "pre-flop":
+                  dealResult = await RoundService.dealFlop(data.gameId);
+                  io.to(roomName).emit("flop:revealed", dealResult);
+                  break;
 
-              case "flop":
-                dealResult = await RoundService.dealTurn(data.gameId);
-                io.to(roomName).emit("turn:revealed", dealResult);
-                break;
+                case "flop":
+                  dealResult = await RoundService.dealTurn(data.gameId);
+                  io.to(roomName).emit("turn:revealed", dealResult);
+                  break;
 
-              case "turn":
-                dealResult = await RoundService.dealRiver(data.gameId);
-                io.to(roomName).emit("river:revealed", dealResult);
-                break;
+                case "turn":
+                  dealResult = await RoundService.dealRiver(data.gameId);
+                  io.to(roomName).emit("river:revealed", dealResult);
+                  break;
 
-              case "river":
-                // call showdown later
-                break;
+                case "river":
+                  // call showdown later
+                  break;
+              }
             }
-          }
 
           }
 
           return;
         }
 
-                // ==================== OTHER ACTIONS (later) ====================
+        // ==================== OTHER ACTIONS (later) ====================
         // fold / call / raise / all in will go here in future phases
 
       } catch (error) {

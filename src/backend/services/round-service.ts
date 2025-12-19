@@ -7,6 +7,7 @@
 import db from "../db/connection";
 import * as Games from "../db/games";
 import * as PlayerCards from "../db/player-cards";
+import * as CommunityCards from "../db/community-cards";
 import logger from "../lib/logger";
 
 // Check if betting round is complete
@@ -46,44 +47,46 @@ export async function dealRiver(gameId: number) {
 
 // Interface for all dealing functions (dealFlop, dealTurn, dealRiver). This does the actual work of dealing community cards.
 function dealCommunityCards(
-    gameId: number,
-    expectedState: string,
-    nextState: string,
-    count: number
-  ) {
-    return db.tx(async (t) => {
-      const game = await Games.get(gameId);
-  
-      if (game.state !== expectedState) {
-        throw new Error(
-          `Invalid state transition: expected ${expectedState}, got ${game.state}`
-        );
-      }
-  
-      // Pull cards from deck (IDs only)
-      const cards = await PlayerCards.getCardsFromDeck(gameId, count);
-      if (cards.length !== count) {
-        throw new Error("Deck exhausted while dealing community cards");
-      }
-  
-      // Insert community cards
-      for (const card of cards) {
-        await PlayerCards.addCommunityCard(gameId, card.id);
-      }
-  
-      // Advance game state
-      await Games.updateGameState(gameId, nextState);
-  
-      // Reset bets for new round
-      await Games.resetBets(gameId);
-  
-      logger.info(
-        `Game ${gameId}: advanced to ${nextState}, dealt ${count} card(s)`
+  gameId: number,
+  expectedState: string,
+  nextState: string,
+  count: number
+) {
+  return db.tx(async (t) => {
+    const game = await Games.get(gameId);
+
+    if (game.state !== expectedState) {
+      throw new Error(
+        `Invalid state transition: expected ${expectedState}, got ${game.state}`
       );
-  
-      return {
-        state: nextState,
-        cardIds: cards.map(c => c.id),
-      };
-    });
-  }
+    }
+
+    // Pull cards from deck (IDs only)
+    const cards = await PlayerCards.getCardsFromDeck(gameId, count);
+    if (cards.length !== count) {
+      throw new Error("Deck exhausted while dealing community cards");
+    }
+
+    // Bulk insert community cards using new module
+    const cardIds = cards.map(c => c.id);
+    await CommunityCards.addCommunityCards(gameId, cardIds);
+
+    // Advance game state
+    await Games.updateGameState(gameId, nextState);
+
+    // Reset bets for new round
+    await Games.resetBets(gameId);
+
+    // Fetch full card details for socket payload
+    const communityCards = await CommunityCards.getCommunityCards(gameId);
+
+    logger.info(
+      `Game ${gameId}: advanced to ${nextState}, dealt ${count} card(s)`
+    );
+
+    return {
+      state: nextState,
+      community_cards: communityCards,
+    };
+  });
+}

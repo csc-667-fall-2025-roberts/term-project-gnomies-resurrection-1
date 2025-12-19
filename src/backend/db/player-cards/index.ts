@@ -34,12 +34,3 @@ export const countDeckCards = async (gameId: number): Promise<number> => {
   return parseInt(result.count);
 };
 
-export async function addCommunityCard(gameId: number, cardId: number) {
-  await db.none(
-    `
-    INSERT INTO community_cards (game_id, card_id)
-    VALUES ($1, $2)
-    `,
-    [gameId, cardId]
-  );
-}

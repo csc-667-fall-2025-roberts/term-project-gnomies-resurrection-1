@@ -17,7 +17,7 @@ import logger from "../lib/logger";
  * - Validates minimum player count (at least 2)
  * - Assigns deterministic table positions (no shuffle)
  * - Creates a shuffled deck for the game
- * - Deals two privaate hole cards to each player (round-robin)
+ * - Deals two private hole cards to each player (round-robin)
  * - Determines the first player to act (pre-flop rules)
  * - Transitions game state from lobby to pre-flop
  *

@@ -113,16 +113,16 @@ Database migrations include:
 - `src/backend/db/community-cards/index.ts`
 
 **SQL queries needed:**
-- [ ] ADD_COMMUNITY_CARDS: Insert multiple cards using unnest for flop/turn/river
-- [ ] GET_COMMUNITY_CARDS: Fetch all community cards with rank and suit
-- [ ] COUNT_COMMUNITY_CARDS: Return how many cards currently revealed
-- [ ] CLEAR_COMMUNITY_CARDS: Delete all community cards for new hand
+- [x] ADD_COMMUNITY_CARDS: Insert multiple cards using unnest for flop/turn/river
+- [x] GET_COMMUNITY_CARDS: Fetch all community cards with rank and suit
+- [x] COUNT_COMMUNITY_CARDS: Return how many cards currently revealed
+- [x] CLEAR_COMMUNITY_CARDS: Delete all community cards for new hand
 
 **Wrapper functions needed:**
-- [ ] addCommunityCards(gameId, cardIds[]) - adds cards to table
-- [ ] getCommunityCards(gameId) - fetches all with details
-- [ ] countCommunityCards(gameId) - returns count
-- [ ] clearCommunityCards(gameId) - removes all for reset
+- [x] addCommunityCards(gameId, cardIds[]) - adds cards to table
+- [x] getCommunityCards(gameId) - fetches all with details
+- [x] countCommunityCards(gameId) - returns count
+- [x] clearCommunityCards(gameId) - removes all for reset
 
 **Testing:**
 - [ ] Can add 3 cards for flop
