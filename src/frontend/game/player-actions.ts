@@ -42,18 +42,18 @@ let onActionCallback: ActionCallback | null = null;
 export function initializePlayerActions(onAction: ActionCallback): void {
     onActionCallback = onAction;
 
-    const foldBtn  = document.querySelector<HTMLButtonElement>(".btn-fold");
-    const checkBtn = document.querySelector<HTMLButtonElement>(".btn-check");
-    const callBtn  = document.querySelector<HTMLButtonElement>(".btn-call");
-    const raiseBtn = document.querySelector<HTMLButtonElement>(".btn-raise");
-    const raiseInput = document.querySelector<HTMLInputElement>(".raise-input");
-    const allInBtn = document.querySelector<HTMLButtonElement>(".btn-all-in");
-  
+    foldBtn = document.querySelector<HTMLButtonElement>(".btn-fold");
+    checkBtn = document.querySelector<HTMLButtonElement>(".btn-check");
+    callBtn = document.querySelector<HTMLButtonElement>(".btn-call");
+    raiseBtn = document.querySelector<HTMLButtonElement>(".btn-raise");
+    raiseInput = document.querySelector<HTMLInputElement>(".raise-input");
+    allInBtn = document.querySelector<HTMLButtonElement>(".btn-all-in");
+
     console.log("Initializing player actions", {
-      foldBtn,
-      checkBtn,
-      callBtn,
-      raiseBtn,
+        foldBtn,
+        checkBtn,
+        callBtn,
+        raiseBtn,
     });
 
     // Fold button

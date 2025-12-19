@@ -127,13 +127,29 @@ export const initSockets = (httpServer: HTTPServer) => {
           return;
         }
 
+        // Get room name for broadcasts
+        const roomName = gameRoom(data.gameId);
+
+        // ==================== FOLD ====================
+        if (data.action === "fold") {
+          // Mark player as folded (bet_amount = -1)
+          await Games.updatePlayerBet(data.gameId, session.user!.id, -1);
+          await Games.advanceTurn(data.gameId);
+
+          socket.emit("action:confirmed", { action: "fold" });
+          io.to(roomName).emit("player:actionTaken", {
+            userId: session.user!.id,
+            username: session.user!.username,
+            action: "fold",
+          });
+
+          logger.info(`Player ${session.user!.id} folded in game ${data.gameId}`);
+        }
+
         // ==================== CHECK ====================
-        if (data.action === "check") {
+        else if (data.action === "check") {
           const currentBet = await Games.getCurrentBet(data.gameId);
-          const playerBet = await Games.getPlayerBet(
-            data.gameId,
-            session.user!.id
-          );
+          const playerBet = await Games.getPlayerBet(data.gameId, session.user!.id);
 
           // Rule: can only check if there is no bet to call
           if (playerBet !== currentBet) {
@@ -144,58 +160,181 @@ export const initSockets = (httpServer: HTTPServer) => {
             return;
           }
 
-          // Advance turn (no chips move)
           await Games.advanceTurn(data.gameId);
 
-          // Broadcast action
-          const roomName = gameRoom(data.gameId);
+          socket.emit("action:confirmed", { action: "check" });
           io.to(roomName).emit("player:actionTaken", {
             userId: session.user!.id,
             username: session.user!.username,
             action: "check",
           });
 
-          // Detect end of betting round
-          if (await Games.areAllBetsEqual(data.gameId)) {
-            console.log("Betting round complete (check)");
-
-            // After advancing the turn
-            const isComplete = await RoundService.isBettingRoundComplete(data.gameId);
-
-            if (isComplete) {
-              const updatedGame = await Games.get(data.gameId);
-
-              let dealResult;
-
-              switch (updatedGame.state) {
-                case "pre-flop":
-                  dealResult = await RoundService.dealFlop(data.gameId);
-                  io.to(roomName).emit("flop:revealed", dealResult);
-                  break;
-
-                case "flop":
-                  dealResult = await RoundService.dealTurn(data.gameId);
-                  io.to(roomName).emit("turn:revealed", dealResult);
-                  break;
-
-                case "turn":
-                  dealResult = await RoundService.dealRiver(data.gameId);
-                  io.to(roomName).emit("river:revealed", dealResult);
-                  break;
-
-                case "river":
-                  // call showdown later
-                  break;
-              }
-            }
-
-          }
-
-          return;
+          logger.info(`Player ${session.user!.id} checked in game ${data.gameId}`);
         }
 
-        // ==================== OTHER ACTIONS (later) ====================
-        // fold / call / raise / all in will go here in future phases
+        // ==================== CALL ====================
+        else if (data.action === "call") {
+          const currentBet = await Games.getCurrentBet(data.gameId);
+          const playerBet = await Games.getPlayerBet(data.gameId, session.user!.id);
+          const callAmount = currentBet - playerBet;
+
+          if (callAmount <= 0) {
+            socket.emit("action:rejected", {
+              action: "call",
+              reason: "Nothing to call - use check instead",
+            });
+            return;
+          }
+
+          // Get player stats to check chip count
+          const players = await Games.getPlayersWithStats(data.gameId);
+          const player = players.find(p => p.user_id === session.user!.id);
+          if (player === undefined || player.chip_count < callAmount) {
+            socket.emit("action:rejected", {
+              action: "call",
+              reason: "Not enough chips to call",
+            });
+            return;
+          }
+
+          // Deduct chips, update bet, add to pot
+          await Games.deductChips(data.gameId, session.user!.id, callAmount);
+          await Games.updatePlayerBet(data.gameId, session.user!.id, currentBet);
+          const newPot = await Games.addToPot(data.gameId, callAmount);
+          await Games.advanceTurn(data.gameId);
+
+          socket.emit("action:confirmed", { action: "call", amount: callAmount });
+          io.to(roomName).emit("player:actionTaken", {
+            userId: session.user!.id,
+            username: session.user!.username,
+            action: "call",
+            amount: callAmount,
+            newPot,
+          });
+
+          logger.info(`Player ${session.user!.id} called $${callAmount} in game ${data.gameId}`);
+        }
+
+        // ==================== RAISE ====================
+        else if (data.action === "raise") {
+          const raiseToAmount = data.amount || 0;
+          if (raiseToAmount <= 0) {
+            socket.emit("action:rejected", {
+              action: "raise",
+              reason: "Invalid raise amount",
+            });
+            return;
+          }
+
+          const currentBet = await Games.getCurrentBet(data.gameId);
+          const playerBet = await Games.getPlayerBet(data.gameId, session.user!.id);
+
+          if (raiseToAmount <= currentBet) {
+            socket.emit("action:rejected", {
+              action: "raise",
+              reason: `Raise must be more than current bet of $${currentBet}`,
+            });
+            return;
+          }
+
+          const chipsNeeded = raiseToAmount - playerBet;
+          const players = await Games.getPlayersWithStats(data.gameId);
+          const player = players.find(p => p.user_id === session.user!.id);
+          if (player === undefined || player.chip_count < chipsNeeded) {
+            socket.emit("action:rejected", {
+              action: "raise",
+              reason: "Not enough chips to raise",
+            });
+            return;
+          }
+
+          await Games.deductChips(data.gameId, session.user!.id, chipsNeeded);
+          await Games.updatePlayerBet(data.gameId, session.user!.id, raiseToAmount);
+          const newPot = await Games.addToPot(data.gameId, chipsNeeded);
+          await Games.advanceTurn(data.gameId);
+
+          socket.emit("action:confirmed", { action: "raise", amount: raiseToAmount });
+          io.to(roomName).emit("player:actionTaken", {
+            userId: session.user!.id,
+            username: session.user!.username,
+            action: "raise",
+            amount: raiseToAmount,
+            newPot,
+          });
+
+          logger.info(`Player ${session.user!.id} raised to $${raiseToAmount} in game ${data.gameId}`);
+        }
+
+        // ==================== ALL-IN ====================
+        else if (data.action === "all-in") {
+          const players = await Games.getPlayersWithStats(data.gameId);
+          const player = players.find(p => p.user_id === session.user!.id);
+          if (player === undefined) {
+            socket.emit("action:rejected", {
+              action: "all-in",
+              reason: "Player not found",
+            });
+            return;
+          }
+
+          const remainingChips = player.chip_count;
+          if (remainingChips <= 0) {
+            socket.emit("action:rejected", {
+              action: "all-in",
+              reason: "No chips remaining",
+            });
+            return;
+          }
+
+          const newBetAmount = player.current_bet + remainingChips;
+          await Games.deductChips(data.gameId, session.user!.id, remainingChips);
+          await Games.updatePlayerBet(data.gameId, session.user!.id, newBetAmount);
+          const newPot = await Games.addToPot(data.gameId, remainingChips);
+          await Games.advanceTurn(data.gameId);
+
+          socket.emit("action:confirmed", { action: "all-in", amount: remainingChips });
+          io.to(roomName).emit("player:actionTaken", {
+            userId: session.user!.id,
+            username: session.user!.username,
+            action: "all-in",
+            amount: remainingChips,
+            newPot,
+          });
+
+          logger.info(`Player ${session.user!.id} went all-in with $${remainingChips} in game ${data.gameId}`);
+        }
+
+        // ==================== ROUND ADVANCEMENT ====================
+        // Check if betting round is complete after ANY action
+        const isComplete = await RoundService.isBettingRoundComplete(data.gameId);
+        if (isComplete) {
+          console.log(`Betting round complete after ${data.action}`);
+          const updatedGame = await Games.get(data.gameId);
+
+          let dealResult;
+
+          switch (updatedGame.state) {
+            case "pre-flop":
+              dealResult = await RoundService.dealFlop(data.gameId);
+              io.to(roomName).emit("flop:revealed", dealResult);
+              break;
+
+            case "flop":
+              dealResult = await RoundService.dealTurn(data.gameId);
+              io.to(roomName).emit("turn:revealed", dealResult);
+              break;
+
+            case "turn":
+              dealResult = await RoundService.dealRiver(data.gameId);
+              io.to(roomName).emit("river:revealed", dealResult);
+              break;
+
+            case "river":
+              // TODO: call showdown logic
+              io.to(roomName).emit("hand:complete", { reason: "showdown" });
+              break;
+          }
+        }
 
       } catch (error) {
         logger.error(
