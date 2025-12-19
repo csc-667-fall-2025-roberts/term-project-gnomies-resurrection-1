@@ -17,6 +17,7 @@ import {
   LIST_GAMES,
   SET_CURRENT_TURN,
   SET_PLAYER_POSITION,
+  SET_PLAYER_ROLE,
   START_GAME,
   UPDATE_PLAYER_CHIPS,
   UPDATE_PLAYER_BET,
@@ -94,6 +95,9 @@ const getPlayerPosition = async (gameId: number, userId: number, dbClient: DbCli
   );
   return result?.position ?? null;
 };
+
+const setPlayerRole = async (gameId: number, userId: number, role: string, dbClient: DbClient = db) =>
+  await dbClient.none(SET_PLAYER_ROLE, [gameId, userId, role]);
 
 // Advance turn to next active (non-folded) player
 // Skips folded players automatically via SQL (bet_amount >= 0)
@@ -231,6 +235,7 @@ export {
   resetBets,
   setCurrentTurn,
   setPlayerPosition,
+  setPlayerRole,
   start,
   updatePlayerBet,
 };

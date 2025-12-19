@@ -23,10 +23,25 @@ import {
 
 import {
     initializePlayerActions,
-    updateActionButtons,
-    showActionFeedback,
-    resetActionState
+    updateActionButtons
 } from "./game/player-actions";
+import {
+    BETTING_ACTION,
+    FLOP_REVEALED,
+    GAME_CHAT_MESSAGE,
+    GAME_ENDED,
+    GAME_ENDED_INTERNAL,
+    GAME_STARTED,
+    GAME_STATE,
+    GAME_STATE_REQUEST,
+    HAND_COMPLETE,
+    HAND_DEALT,
+    PLAYER_JOINED,
+    PLAYER_LEFT,
+    RIVER_REVEALED,
+    TURN_CHANGED,
+    TURN_REVEALED
+} from "../shared/keys";
 
 // Get game ID from server-rendered data attribute
 const gameId = document.body.dataset.gameId || "";
@@ -64,7 +79,7 @@ function hideReconnectingUI(): void {
  */
 socket.on("connect", () => {
     console.log("Connected/Reconnected to game server");
-    socket.emit("game:requestState", { gameId });
+    socket.emit(GAME_STATE_REQUEST, { gameId });
     hideReconnectingUI();
 });
 
@@ -82,26 +97,26 @@ socket.on("disconnect", () => {
  * Handle player joined event
  * Request fresh game state to update player list without page reload
  */
-socket.on("player-joined", (data: any) => {
+socket.on(PLAYER_JOINED, (data: any) => {
     console.log("Player joined:", data);
     // Request fresh state from server (like chat - no page reload!)
-    socket.emit("game:requestState", { gameId });
+    socket.emit(GAME_STATE_REQUEST, { gameId });
 });
 
 /**
  * Handle player left event
  * Request fresh game state to update player list without page reload
  */
-socket.on("player-left", (data: any) => {
+socket.on(PLAYER_LEFT, (data: any) => {
     console.log("Player left:", data);
     // Request fresh state from server (like chat - no page reload!)
-    socket.emit("game:requestState", { gameId });
+    socket.emit(GAME_STATE_REQUEST, { gameId });
 });
 
 /**
  * Handle game started event
  */
-socket.on("game:started", (data: any) => {
+socket.on(GAME_STARTED, (data: any) => {
     // TODO: Implement proper state update
     // Hide lobby overlay
     // Show game board
@@ -118,7 +133,7 @@ socket.on("game:started", (data: any) => {
 /**
  * Handle new hand dealt
  */
-socket.on("hand:dealt", (data: any) => {
+socket.on(HAND_DEALT, (data: any) => {
     // TODO: Implement hand dealt logic
     // Clear community cards
     // Update player hands
@@ -134,7 +149,7 @@ socket.on("hand:dealt", (data: any) => {
 /**
  * Handle flop cards revealed
  */
-socket.on("flop:revealed", (data: any) => {
+socket.on(FLOP_REVEALED, (data: any) => {
     console.log("Flop revealed:", data);
     updateCommunityCards(data.community_cards);
     updateHandStage("flop");
@@ -143,7 +158,7 @@ socket.on("flop:revealed", (data: any) => {
 /**
  * Handle turn card revealed
  */
-socket.on("turn:revealed", (data: any) => {
+socket.on(TURN_REVEALED, (data: any) => {
     console.log("Turn revealed:", data);
     updateCommunityCards(data.community_cards);
     updateHandStage("turn");
@@ -152,7 +167,7 @@ socket.on("turn:revealed", (data: any) => {
 /**
  * Handle river card revealed
  */
-socket.on("river:revealed", (data: any) => {
+socket.on(RIVER_REVEALED, (data: any) => {
     console.log("River revealed:", data);
     updateCommunityCards(data.community_cards);
     updateHandStage("river");
@@ -161,7 +176,7 @@ socket.on("river:revealed", (data: any) => {
 /**
  * Handle betting action (HTTP route path - kept for backwards compatibility)
  */
-socket.on("betting:action", (data: any) => {
+socket.on(BETTING_ACTION, (data: any) => {
     console.log("Betting action:", data);
 
     if (data.newPot !== undefined) {
@@ -173,14 +188,14 @@ socket.on("betting:action", (data: any) => {
     }
 
     // Request full state sync to keep all displays consistent
-    socket.emit("game:requestState", { gameId });
+    socket.emit(GAME_STATE_REQUEST, { gameId });
 });
 
 /**
  * Handle turn changed
  * Starts/stops timer based on whose turn it is
  */
-socket.on("turn:changed", (data: any) => {
+socket.on(TURN_CHANGED, (data: any) => {
     console.log("Turn changed:", data);
 
     updateTurnIndicator(data.is_my_turn, data.current_turn_user_id);
@@ -220,7 +235,7 @@ socket.on("turn:changed", (data: any) => {
 /**
  * Handle game state update
  */
-socket.on("game:state", (data: any) => {
+socket.on(GAME_STATE, (data: any) => {
     console.log("Game state update:", data);
 
     // Full state sync
@@ -241,17 +256,17 @@ socket.on("game:state", (data: any) => {
 /**
  * Handle hand complete (showdown)
  */
-socket.on("hand:complete", (data: any) => {
+socket.on(HAND_COMPLETE, (data: any) => {
     console.log("Hand complete:", data);
     updateHandStage("showdown");
     showShowdownModal(data);
-    socket.emit("game:requestState", { gameId });
+    socket.emit(GAME_STATE_REQUEST, { gameId });
 });
 
 /**
  * Handle game ended (lowercase - for internal events)
  */
-socket.on("game:ended", (data: { winner?: { username: string } }) => {
+socket.on(GAME_ENDED_INTERNAL, (data: { winner?: { username: string } }) => {
     console.log("Game ended:", data);
     const winnerName = data.winner?.username || "Unknown";
     showGameOverModal(winnerName);
@@ -260,7 +275,7 @@ socket.on("game:ended", (data: { winner?: { username: string } }) => {
 /**
  * Handle GAME_ENDED (uppercase - from HTTP route broadcast)
  */
-socket.on("GAME_ENDED", (data: { gameId: number }) => {
+socket.on(GAME_ENDED, (data: { gameId: number }) => {
     console.log("Game ended via route:", data);
     showGameOverModal("The game has been ended by the owner.");
 });
@@ -401,24 +416,6 @@ socket.on("error", (error: { message?: string }) => {
 });
 
 /**
- * Handle action confirmed by server
- */
-socket.on("action:confirmed", (data: any) => {
-    console.log("Action confirmed:", data);
-    showActionFeedback(data.action, true);
-    resetActionState();
-});
-
-/**
- * Handle action rejected by server
- */
-socket.on("action:rejected", (data: any) => {
-    console.log("Action rejected:", data);
-    showActionFeedback(data.action, false);
-    resetActionState();
-});
-
-/**
  * Initialize when DOM ready
  */
 document.addEventListener("DOMContentLoaded", () => {
@@ -428,7 +425,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initializePlayerActions();
 
     // Request initial game state
-    socket.emit("game:requestState", { gameId });
+    socket.emit(GAME_STATE_REQUEST, { gameId });
 
     const chatInput = document.getElementById("game-chat-input") as HTMLInputElement;
     const chatMessages = document.getElementById("game-chat-messages");
@@ -436,7 +433,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (chatInput) {
         chatInput.addEventListener("keypress", (e) => {
             if (e.key === "Enter" && chatInput.value.trim()) {
-                socket.emit("game-chat-message", {
+                socket.emit(GAME_CHAT_MESSAGE, {
                     gameId,
                     message: chatInput.value.trim(),
                 });
@@ -445,7 +442,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    socket.on("game-chat-message", ({ username, message }: { username: string; message: string }) => {
+    socket.on(GAME_CHAT_MESSAGE, ({ username, message }: { username: string; message: string }) => {
         if (chatMessages) {
             const messageDiv = document.createElement("div");
             messageDiv.className = "message";
@@ -458,10 +455,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 socket.on("connect", () => {
-    socket.emit("game:requestState", { gameId });
+    socket.emit(GAME_STATE_REQUEST, { gameId });
 });
 
-socket.on("game:state", (state) => {
+socket.on(GAME_STATE, (state) => {
     console.log("GAME STATE (client):", state);
 
     if (state.my_cards) {

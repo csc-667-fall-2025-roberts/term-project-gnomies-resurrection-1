@@ -38,7 +38,7 @@ export async function initGameSocket(socket: Socket, gameId: number, userId: num
   logger.info(`User ${userId} joined game ${gameId} socket room`);
 
   // Notify other players in the game room
-  socket.to(gameRoom(gameId)).emit("player-joined", {
+  socket.to(gameRoom(gameId)).emit(PLAYER_JOINED, {
     userId,
   });
 }
@@ -86,4 +86,3 @@ export function broadcastGameStarted(
   });
   logger.info(`Broadcast game:started for game ${gameId}, first player: ${firstPlayerId}`);
 }
-

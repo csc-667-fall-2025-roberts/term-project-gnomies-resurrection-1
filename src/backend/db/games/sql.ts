@@ -47,7 +47,7 @@ export const GAME_BY_ID = `
 `;
 
 export const GET_PLAYER_IDS = `
-  SELECT user_id FROM game_players WHERE game_id = $1
+  SELECT user_id FROM game_players WHERE game_id = $1 ORDER BY joined_at ASC
 `;
 
 // Turn management queries
@@ -90,6 +90,12 @@ export const GET_PLAYER_POSITION = `
 export const SET_PLAYER_POSITION = `
   UPDATE game_players
   SET position = $3
+  WHERE game_id = $1 AND user_id = $2
+`;
+
+export const SET_PLAYER_ROLE = `
+  UPDATE game_players
+  SET role = $3
   WHERE game_id = $1 AND user_id = $2
 `;
 

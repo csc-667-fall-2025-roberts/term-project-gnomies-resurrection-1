@@ -1,6 +1,13 @@
 import { Server as HTTPServer } from "http";
 import { Server } from "socket.io";
-import { GLOBAL_ROOM } from "../../shared/keys";
+import {
+  GAME_CHAT_MESSAGE,
+  GAME_STATE,
+  GAME_STATE_REQUEST,
+  GLOBAL_ROOM,
+  LEAVE_GAME_ROOM,
+  PLAYER_LEFT,
+} from "../../shared/keys";
 import { User } from "../../types/types";
 import { sessionMiddleware } from "../config/session";
 import { Games } from "../db";
@@ -40,7 +47,7 @@ export const initSockets = (httpServer: HTTPServer) => {
 
 
     // Handle game state request - return full game state to requesting client
-    socket.on("game:requestState", async ({ gameId }: { gameId: string | number }) => {
+    socket.on(GAME_STATE_REQUEST, async ({ gameId }: { gameId: string | number }) => {
       try {
         const parsedGameId = typeof gameId === "string" ? parseInt(gameId) : gameId;
         const game = await Games.get(parsedGameId);
@@ -48,7 +55,7 @@ export const initSockets = (httpServer: HTTPServer) => {
         const myCards = await PlayerCards.getPlayerCards(parsedGameId, session.user!.id);
         const communityCards = await CommunityCards.getCommunityCards(parsedGameId);
 
-        socket.emit("game:state", {
+        socket.emit(GAME_STATE, {
           ...game,
           players,
           community_cards: communityCards,
@@ -61,23 +68,23 @@ export const initSockets = (httpServer: HTTPServer) => {
       }
     });
 
-    socket.on("leave-game-room", (gameId: number) => {
+    socket.on(LEAVE_GAME_ROOM, (gameId: number) => {
       const roomName = gameRoom(gameId);
       socket.leave(roomName);
       logger.info(`User ${session.user!.username} left game room: ${roomName}`);
 
-      socket.to(roomName).emit("player-left", {
+      socket.to(roomName).emit(PLAYER_LEFT, {
         username: session.user!.username,
         userId: session.user!.id,
       });
     });
 
-    socket.on("game-chat-message", ({ gameId, message }: { gameId: number; message: string }) => {
+    socket.on(GAME_CHAT_MESSAGE, ({ gameId, message }: { gameId: number; message: string }) => {
       const roomName = gameRoom(gameId);
       // Sanitize chat message to prevent XSS
       const sanitizedMessage = sanitizeString(message);
 
-      io.to(roomName).emit("game-chat-message", {
+      io.to(roomName).emit(GAME_CHAT_MESSAGE, {
         username: session.user!.username,
         userId: session.user!.id,
         message: sanitizedMessage,

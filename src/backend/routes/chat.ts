@@ -1,6 +1,7 @@
 import express from "express";
 import { CHAT_LISTING, CHAT_MESSAGE, GLOBAL_ROOM } from "../../shared/keys";
 import { Chat } from "../db";
+import { sanitizeString } from "../utils/sanitize";
 
 const router = express.Router();
 
@@ -19,8 +20,9 @@ router.post("/", async (request, response) => {
 
   const { id } = request.session.user!;
   const { message } = request.body;
+  const sanitizedMessage = sanitizeString(message);
 
-  const result = await Chat.create(id, message);
+  const result = await Chat.create(id, sanitizedMessage);
 
   const io = request.app.get("io");
   io.to(GLOBAL_ROOM).emit(CHAT_MESSAGE, result);

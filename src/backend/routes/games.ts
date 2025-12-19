@@ -1,7 +1,7 @@
 import express from "express";
 import { Server } from "socket.io";
 
-import { GAME_CREATE, GAME_LISTING, GLOBAL_ROOM } from "../../shared/keys";
+import { GAME_CREATE, GAME_ENDED, GAME_LISTING, GAME_UPDATE, GLOBAL_ROOM } from "../../shared/keys";
 import { Games } from "../db";
 import { generateGameName } from "../lib/game-names";
 import logger from "../lib/logger";
@@ -194,10 +194,10 @@ router.post("/:id/end", async (request, response) => {
 
     // Broadcast to all players in the game room
     const io = request.app.get("io") as Server;
-    io.to(gameRoom(gameId)).emit("GAME_ENDED", { gameId });
+    io.to(gameRoom(gameId)).emit(GAME_ENDED, { gameId });
 
     // Also broadcast to lobby that game ended
-    io.to(GLOBAL_ROOM).emit("games:updated", { gameId, state: "game-over" });
+    io.to(GLOBAL_ROOM).emit(GAME_UPDATE, { gameId, state: "game-over" });
 
     logger.info(`Game ${gameId} ended by owner ${userId}`);
     response.redirect("/lobby");
@@ -208,4 +208,3 @@ router.post("/:id/end", async (request, response) => {
 });
 
 export default router;
-

@@ -14,6 +14,11 @@ export const PLAYER_LEFT = "player-left";
 
 // Game state events
 export const GAME_STARTED = "game:started";
+export const GAME_STATE_REQUEST = "game:requestState";
+export const GAME_STATE = "game:state";
+export const GAME_ENDED = "GAME_ENDED";
+export const GAME_ENDED_INTERNAL = "game:ended";
+export const HAND_DEALT = "hand:dealt";
 
 // Round progression events (community cards)
 export const FLOP_REVEALED = "flop:revealed";
@@ -24,3 +29,4 @@ export const RIVER_REVEALED = "river:revealed";
 // NOTE: Client actions go via HTTP POST /games/:id/:action, NOT sockets
 export const BETTING_ACTION = "betting:action";
 export const HAND_COMPLETE = "hand:complete";
+export const TURN_CHANGED = "turn:changed";

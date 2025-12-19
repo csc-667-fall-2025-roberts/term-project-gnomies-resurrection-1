@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Game — <%- name %></title>
+  <title>Game — <%= name %></title>
   <link rel="stylesheet" href="/css/bundle.css" />
 </head>
 
@@ -12,9 +12,9 @@
 
   <div class="bg"></div>
   <div class="header">
-    <h1><%- name %></h1>
+    <h1><%= name %></h1>
     <div class="header__identity">
-      <span class="user-info">Playing as: <strong><%- currentUsername %></strong></span>
+      <span class="user-info">Playing as: <strong><%= currentUsername %></strong></span>
       <a href="/lobby" class="logout-btn">Return to Lobby</a>
     </div>
   </div>
@@ -54,7 +54,7 @@
               <% var isMyTurn = player.user_id === current_turn_user_id; %>
               <div class="player-seat <%- posClass %><% if (isMyTurn) { %> active-turn<% } %>" data-user-id="<%- player.user_id %>">
                 <div class="player-seat__label">
-                  <strong><%- player.username %></strong>
+                  <strong><%= player.username %></strong>
                   <div class="player-seat__stack">$<%- player.chip_count %></div>
                   <% if (player.current_bet > 0) { %>
                     <div class="current-bet">Bet: $<%- player.current_bet %></div>
@@ -96,7 +96,7 @@
     <div class="game-sidebar">
       <div class="game-meta">
         <div class="meta-title">Game Info</div>
-        <div><strong>Name:</strong> <%- name %></div>
+        <div><strong>Name:</strong> <%= name %></div>
         <div><strong>State:</strong> <span id="game-state" class="game-state-badge game-state--<%- state %>"><%- state
               %></span></div>
         <div><strong>Players:</strong> <span id="player-count"><%- players.length %></span> / <%- maxPlayers %></div>
