@@ -143,7 +143,7 @@ socket.on(HAND_DEALT, (data: any) => {
     updatePlayerHand(data.my_cards);
     updateCommunityCards([]);
     updateHandStage("preflop");
-    updatePot(data.pot);
+    updatePot(data.pot_money);
 });
 
 /**
@@ -239,7 +239,7 @@ socket.on(GAME_STATE, (data: any) => {
     console.log("Game state update:", data);
 
     // Full state sync
-    updatePot(data.pot);
+    updatePot(data.pot_money);
     updateCommunityCards(data.community_cards);
     updatePlayerHand(data.my_cards);
     updatePlayerSeats(data.players);
