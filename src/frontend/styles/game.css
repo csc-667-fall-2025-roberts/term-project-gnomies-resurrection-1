@@ -986,6 +986,17 @@ body.page-game {
   /* Toggle button lives in the header - show it on small screens */
   .header #game-info-toggle { display: inline-block; }
 
+  .header #game-info-toggle {
+    font-family: var(--font-family);
+    font-weight: var(--font-weight-medium);
+    color: white;
+    background: transparent;
+    border: 2px solid rgba(255, 255, 255, 0.281);
+    padding: 8px 12px;
+    border-radius: 8px;
+    text-transform: none;
+  }
+
 
 /* Hide header toggle on wide screens */
 @media (min-width: 1101px) {
