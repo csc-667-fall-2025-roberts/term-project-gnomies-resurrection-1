@@ -475,4 +475,77 @@ document.addEventListener("DOMContentLoaded", () => {
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
     });
+
+    // Header toggle for game info + chat (mobile-friendly)
+    const infoToggle = document.getElementById("game-info-toggle");
+    const sidebar = document.querySelector<HTMLElement>(".game-sidebar");
+
+    if (infoToggle && sidebar) {
+        const btn = infoToggle as HTMLElement;
+
+        // Initialize: on small screens keep the sidebar hidden until user opens it
+        if (window.innerWidth <= 1100) {
+            sidebar.classList.add("hidden");
+            btn.setAttribute("aria-expanded", "false");
+        }
+
+        // Click toggles open state and updates aria; when closed we hide fully
+        infoToggle.addEventListener("click", (e) => {
+            const isOpen = sidebar.classList.toggle("open");
+            if (isOpen) {
+                sidebar.classList.remove("hidden");
+                btn.setAttribute("aria-expanded", "true");
+                // move focus into the sidebar for keyboard users
+                const focusable = sidebar.querySelector<HTMLElement>("input, button, a, [tabindex]:not([tabindex='-1'])");
+                focusable?.focus();
+            } else {
+                sidebar.classList.remove("open");
+                sidebar.classList.add("hidden");
+                btn.setAttribute("aria-expanded", "false");
+                (infoToggle as HTMLElement).focus();
+            }
+        });
+
+        // Close on Escape (hide fully)
+        document.addEventListener("keydown", (ev) => {
+            if (ev.key === "Escape" && sidebar.classList.contains("open")) {
+                sidebar.classList.remove("open");
+                sidebar.classList.add("hidden");
+                btn.setAttribute("aria-expanded", "false");
+                (infoToggle as HTMLElement).focus();
+            }
+        });
+
+        // Close when clicking outside (hide fully)
+        document.addEventListener("click", (ev) => {
+            if (!sidebar.classList.contains("open")) return;
+            const target = ev.target as Node;
+            if (!sidebar.contains(target) && !infoToggle.contains(target)) {
+                sidebar.classList.remove("open");
+                sidebar.classList.add("hidden");
+                btn.setAttribute("aria-expanded", "false");
+            }
+        });
+
+        // Hide/show the header toggle based on window width (remove on wide screens)
+        const updateToggleVisibility = () => {
+            if (window.innerWidth > 1100) {
+                btn.style.display = "none";
+                // ensure panel is closed and visible in layout (remove hidden)
+                sidebar.classList.remove("open");
+                sidebar.classList.remove("hidden");
+                btn.setAttribute("aria-expanded", "false");
+            } else {
+                btn.style.display = ""; // revert to stylesheet
+                // keep sidebar hidden by default until user opens it
+                if (!sidebar.classList.contains("open")) {
+                    sidebar.classList.add("hidden");
+                }
+            }
+        };
+
+        // initialize and observe resizes
+        updateToggleVisibility();
+        window.addEventListener("resize", updateToggleVisibility);
+    }
 });

@@ -896,6 +896,113 @@ body.page-game {
   }
 }
 
+/* Small screens: collapse the entire game info area (including chat) into a
+   single header handle. Hover/focus the handle to expand both Game Info and Chat
+   stacked inside the same panel. This avoids multiple overlapping fixed panels. */
+@media (max-width: 1100px) {
+  .game-layout {
+    flex-direction: column;
+  }
+
+  /* Only the sidebar becomes the fixed handle; chat lives inside it in markup */
+  .game-sidebar {
+    position: fixed;
+    top: 180px;
+    left: 12px;
+    overflow: hidden;
+    z-index: 110;
+    transition: width 0.25s ease, height 0.25s ease, padding 0.2s ease, top 0.2s ease;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    border-radius: 12px;
+    background: var(--color-surface);
+    border: 1px solid rgba(0,0,0,0.06);
+  }
+
+  /* Collapse internal children by default */
+  .game-sidebar > * {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+  }
+
+  .game-sidebar.hidden {
+    display: none !important;
+  }
+
+  /* Small handle label */
+  .game-sidebar::after {
+    content: "Info";
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;            /* small handle height */
+    width: 72px;             /* small handle width */
+    color: var(--color-text);
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    pointer-events: none;
+    position: absolute;      /* keep it anchored, not filling the panel */
+    top: 0;
+    left: 0;
+    border-bottom-right-radius: 8px;
+    background: transparent;
+  }
+
+  /* Hide handle text when panel is expanded/open (or hovered/focused) */
+  .game-sidebar.open::after,
+  .game-sidebar:hover::after,
+  .game-sidebar:focus-within::after {
+    display: none;
+  }
+
+  /* Expand the single panel to reveal both info and chat stacked.
+     Support keyboard/JS toggle via the `.open` class, and keep hover/focus
+     expansion for pointer users. */
+  .game-sidebar.open,
+  .game-sidebar:hover,
+  .game-sidebar:focus-within {
+    width: calc(100% - 24px);
+    left: 12px;
+    right: 12px;
+    height: 600px; /* increased so chat has more room */
+    padding: 12px;
+  }
+
+  /* Show internal content when expanded (hover, focus or JS-open) */
+  .game-sidebar.open > *,
+  .game-sidebar:hover > *,
+  .game-sidebar:focus-within > * {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Keep player controls above the expanded panel */
+  .player-controls {
+    z-index: 200;
+  }
+
+  /* Toggle button lives in the header - show it on small screens */
+  .header #game-info-toggle { display: inline-block; }
+
+
+/* Hide header toggle on wide screens */
+@media (min-width: 1101px) {
+  .header #game-info-toggle { display: none; }
+}
+  /* When expanded, stack children vertically with spacing */
+  .game-sidebar .game-meta {
+    margin-bottom: 12px;
+  }
+
+  /* Make sure chat input is visible and scrollable inside expanded panel */
+  .game-sidebar .game-chat {
+    height: calc(100% + 600px);
+    overflow: auto;
+  }
+}
+
 /* ==================== RECONNECTING OVERLAY ==================== */
 
 #reconnecting-overlay {
