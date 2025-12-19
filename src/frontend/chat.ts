@@ -3,7 +3,7 @@ import * as chatKeys from "../shared/keys";
 import type { ChatMessage } from "../types/types";
 
 // #region agent log
-fetch('http://127.0.0.1:7242/ingest/d57227e9-63c1-4bd2-9c39-e0fc80432844',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'chat.ts:5',message:'chat.ts LOADED',data:{url:window.location.href},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3'})}).catch(()=>{});
+fetch('http://127.0.0.1:7242/ingest/d57227e9-63c1-4bd2-9c39-e0fc80432844', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'chat.ts:5', message: 'chat.ts LOADED', data: { url: window.location.href }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'H3' }) }).catch(() => { });
 // #endregion
 
 const socket = socketIo();
@@ -14,13 +14,13 @@ const button = document.querySelector<HTMLButtonElement>("#message-submit button
 const messageTemplate = document.querySelector<HTMLTemplateElement>("#template-chat-message");
 
 // #region agent log
-fetch('http://127.0.0.1:7242/ingest/d57227e9-63c1-4bd2-9c39-e0fc80432844',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'chat.ts:15',message:'chat DOM elements check',data:{hasListing:!!listing,hasInput:!!input,hasButton:!!button,hasTemplate:!!messageTemplate},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3'})}).catch(()=>{});
+fetch('http://127.0.0.1:7242/ingest/d57227e9-63c1-4bd2-9c39-e0fc80432844', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'chat.ts:15', message: 'chat DOM elements check', data: { hasListing: !!listing, hasInput: !!input, hasButton: !!button, hasTemplate: !!messageTemplate }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'H3' }) }).catch(() => { });
 // #endregion
 
-const appendMessage = ({ username, created_at, message }: ChatMessage) => {
+const appendMessage = ({ username, created_at, message_text }: ChatMessage) => {
   if (!messageTemplate || !listing) {
     // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/d57227e9-63c1-4bd2-9c39-e0fc80432844',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'chat.ts:appendMessage',message:'MISSING DOM ELEMENTS in appendMessage',data:{hasTemplate:!!messageTemplate,hasListing:!!listing},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3'})}).catch(()=>{});
+    fetch('http://127.0.0.1:7242/ingest/d57227e9-63c1-4bd2-9c39-e0fc80432844', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'chat.ts:appendMessage', message: 'MISSING DOM ELEMENTS in appendMessage', data: { hasTemplate: !!messageTemplate, hasListing: !!listing }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'H3' }) }).catch(() => { });
     // #endregion
     return;
   }
@@ -36,8 +36,8 @@ const appendMessage = ({ username, created_at, message }: ChatMessage) => {
   console.log(username, usernameSpan);
 
   const msgSpan = clone.querySelector(".message-text");
-  if (msgSpan) msgSpan.textContent = message;
-  console.log(message, msgSpan);
+  if (msgSpan) msgSpan.textContent = message_text;
+  console.log(message_text, msgSpan);
 
   listing.appendChild(clone);
 };
@@ -97,16 +97,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const bgEl = document.querySelector(".bg") as HTMLElement;
   if (bgEl) {
     const bgStyle = window.getComputedStyle(bgEl);
-    fetch('http://127.0.0.1:7242/ingest/d57227e9-63c1-4bd2-9c39-e0fc80432844',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'chat.ts:DOMReady',message:'BG element styles',data:{zIndex:bgStyle.zIndex,position:bgStyle.position,pointerEvents:bgStyle.pointerEvents,opacity:bgStyle.opacity,display:bgStyle.display},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H2'})}).catch(()=>{});
+    fetch('http://127.0.0.1:7242/ingest/d57227e9-63c1-4bd2-9c39-e0fc80432844', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'chat.ts:DOMReady', message: 'BG element styles', data: { zIndex: bgStyle.zIndex, position: bgStyle.position, pointerEvents: bgStyle.pointerEvents, opacity: bgStyle.opacity, display: bgStyle.display }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'H2' }) }).catch(() => { });
   }
-  
+
   // Check for any fixed/absolute positioned overlays
   const allElements = document.querySelectorAll("*");
   const overlays: any[] = [];
   allElements.forEach((el) => {
     const style = window.getComputedStyle(el);
-    if ((style.position === "fixed" || style.position === "absolute") && 
-        style.zIndex !== "auto" && parseInt(style.zIndex) > 0) {
+    if ((style.position === "fixed" || style.position === "absolute") &&
+      style.zIndex !== "auto" && parseInt(style.zIndex) > 0) {
       overlays.push({
         tag: el.tagName,
         class: el.className,
@@ -116,7 +116,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
   if (overlays.length > 0) {
-    fetch('http://127.0.0.1:7242/ingest/d57227e9-63c1-4bd2-9c39-e0fc80432844',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'chat.ts:DOMReady',message:'Potential overlay elements found',data:{overlays:overlays.slice(0,10)},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H5'})}).catch(()=>{});
+    fetch('http://127.0.0.1:7242/ingest/d57227e9-63c1-4bd2-9c39-e0fc80432844', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'chat.ts:DOMReady', message: 'Potential overlay elements found', data: { overlays: overlays.slice(0, 10) }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'H5' }) }).catch(() => { });
   }
 });
 // #endregion

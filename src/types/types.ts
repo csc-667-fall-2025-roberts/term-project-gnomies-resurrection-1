@@ -12,7 +12,7 @@ export interface SecureUser extends User {
 export interface DbChatMessage {
   id: number;
   user_id: number;
-  message: string;
+  message_text: string;
   created_at: Date;
 }
 
