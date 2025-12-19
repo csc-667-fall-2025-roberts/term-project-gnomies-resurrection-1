@@ -12,11 +12,15 @@ import {
     updatePlayerHand,
     updatePlayerSeats,
     updateTurnIndicator,
+    setActiveTurn,
+    updatePlayerBet,
+    clearAllBets,
     updateHandStage,
     updateAvailableActions,
     startTurnTimer,
     clearTurnTimer
 } from "./game/ui-updates";
+
 import {
     initializePlayerActions,
     updateActionButtons,
@@ -155,15 +159,43 @@ socket.on("river:revealed", (data: any) => {
 });
 
 /**
- * Handle betting action
+ * Handle betting action (HTTP route path - kept for backwards compatibility)
  */
 socket.on("betting:action", (data: any) => {
-    // TODO: Update pot, player chips, current turn
-    console.log("Betting action:", data);
+    console.log("Betting action (HTTP):", data);
 
-    updatePot(data.new_pot);
-    updatePlayerSeats(data.players);
-    updateTurnIndicator(data.is_my_turn, data.current_turn_user_id);
+    if (data.new_pot !== undefined) {
+        updatePot(data.new_pot);
+    }
+    if (data.players !== undefined) {
+        updatePlayerSeats(data.players);
+    }
+    setActiveTurn(data.is_my_turn, data.current_turn_user_id);
+});
+
+/**
+ * Handle player action taken (Socket handler path - active path)
+ * This is the primary event for betting updates
+ */
+socket.on("player:actionTaken", (data: any) => {
+    console.log("Player action taken:", data);
+
+    const { userId, action, newPot } = data;
+
+    // Update pot if provided
+    if (newPot !== undefined) {
+        updatePot(newPot);
+    }
+
+    // Update the player's bet display based on action
+    if (action === "fold") {
+        updatePlayerBet(userId, -1); // -1 = folded
+    }
+    // For other actions (check, call, raise, all-in), 
+    // the game:state response will update all bet displays
+
+    // Request full state sync to ensure UI is consistent
+    socket.emit("game:requestState", { gameId });
 });
 
 /**

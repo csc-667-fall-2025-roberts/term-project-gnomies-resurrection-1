@@ -20,16 +20,78 @@ const playerSeatsContainer = document.getElementById("seats");
 const gameStateElement = document.getElementById("game-state");
 const playerCountElement = document.getElementById("player-count");
 
+// Track previous pot for delta calculation
+let previousPotValue = 0;
+
 /**
- * Update pot display
+ * Update pot display with animation
  * @param amount - Current pot amount in chips
  */
 export function updatePot(amount: number): void {
     // Explicit null check
-    if (potElement !== null) {
-        potElement.textContent = `Pot: $${amount || 0}`;
+    if (potElement === null) {
+        return;
     }
+
+    const currentAmount = amount || 0;
+    const delta = currentAmount - previousPotValue;
+
+    // Update the text content
+    potElement.textContent = `Pot: $${currentAmount}`;
+
+    // Add animation class for pot changes
+    if (delta > 0) {
+        // Pot increased - show pulse animation
+        potElement.classList.remove("pot--pulse", "pot--decrease");
+        // Force reflow to restart animation
+        void potElement.offsetWidth;
+        potElement.classList.add("pot--pulse");
+
+        // Show delta tooltip briefly (large increases > 20%)
+        const percentChange = previousPotValue > 0 ? (delta / previousPotValue) * 100 : 100;
+        if (percentChange > 20 && delta > 10) {
+            showPotDelta(delta);
+        }
+    } else if (delta < 0) {
+        // Pot decreased (new hand or side pot) - subtle indication
+        potElement.classList.remove("pot--pulse", "pot--decrease");
+        void potElement.offsetWidth;
+        potElement.classList.add("pot--decrease");
+    }
+
+    // Update previous value for next comparison
+    previousPotValue = currentAmount;
 }
+
+/**
+ * Show floating "+$X" delta near pot for large changes
+ * @param delta - The amount added to pot
+ */
+function showPotDelta(delta: number): void {
+    if (potElement === null) {
+        return;
+    }
+
+    const host = potElement.parentElement ?? potElement;
+
+    // Create floating delta element
+    const deltaEl = document.createElement("span");
+    deltaEl.className = "pot-delta";
+    deltaEl.textContent = `+$${delta}`;
+    deltaEl.style.position = "absolute";
+    deltaEl.style.right = "-8px";
+    deltaEl.style.top = "-8px";
+
+    // Position near pot element
+    host.style.position = host.style.position || "relative";
+    host.appendChild(deltaEl);
+
+    // Remove after animation completes (1s)
+    setTimeout(() => {
+        deltaEl.remove();
+    }, 1000);
+}
+
 
 /**
  * Update community cards display (flop, turn, river)
@@ -242,21 +304,7 @@ export function updatePlayerSeats(players: Player[]): void {
                 stackEl.textContent = `$${player.chip_count}`;
             }
 
-            // Update current bet
-            let betEl = seatEl.querySelector<HTMLElement>(".current-bet");
-            if (player.current_bet > 0) {
-                if (betEl === null) {
-                    betEl = document.createElement("div");
-                    betEl.className = "current-bet";
-                    const labelEl = seatEl.querySelector(".player-seat__label");
-                    if (labelEl !== null) {
-                        labelEl.appendChild(betEl);
-                    }
-                }
-                betEl.textContent = `Bet: $${player.current_bet}`;
-            } else if (betEl !== null) {
-                betEl.remove();
-            }
+            updatePlayerBet(player.user_id, player.current_bet, player.chip_count);
         }
     });
 
@@ -277,6 +325,102 @@ export function updatePlayerSeats(players: Player[]): void {
     }
 }
 
+/**
+ * Update a single player's bet display without refreshing all seats
+ * This is more efficient for real-time betting updates
+ * 
+ * @param userId - User ID of the player to update
+ * @param betAmount - Current bet amount (-1 = folded, 0 = no bet)
+ * @param chipCount - Optional: player's remaining chips (for all-in detection)
+ */
+export function updatePlayerBet(
+    userId: number,
+    betAmount: number,
+    chipCount?: number
+): void {
+    // Find the player's seat
+    const seat = document.querySelector<HTMLElement>(
+        `.player-seat[data-user-id="${userId}"]`
+    );
+
+    if (seat === null) {
+        return;
+    }
+
+    const labelEl = seat.querySelector(".player-seat__label");
+    if (labelEl === null) {
+        return;
+    }
+
+    // Find or create bet element
+    let betEl = seat.querySelector<HTMLElement>(".current-bet");
+
+    // Handle special cases
+    if (betAmount === -1) {
+        // Player folded
+        seat.classList.add("player-seat--folded");
+        if (betEl !== null) {
+            betEl.textContent = "FOLDED";
+            betEl.classList.add("current-bet--folded");
+        } else {
+            betEl = document.createElement("div");
+            betEl.className = "current-bet current-bet--folded";
+            betEl.textContent = "FOLDED";
+            labelEl.appendChild(betEl);
+        }
+        return;
+    }
+
+    // Remove folded state if not folded
+    seat.classList.remove("player-seat--folded");
+
+    if (betAmount === 0) {
+        // No bet - remove bet display
+        if (betEl !== null) {
+            betEl.remove();
+        }
+        return;
+    }
+
+    // Has a bet - show it
+    if (betEl === null) {
+        betEl = document.createElement("div");
+        betEl.className = "current-bet";
+        labelEl.appendChild(betEl);
+    }
+
+    // Clear previous state classes
+    betEl.classList.remove("current-bet--folded", "current-bet--all-in");
+
+    // Check for all-in (player has bet but no remaining chips)
+    const isAllIn = chipCount !== undefined && chipCount === 0;
+    if (isAllIn) {
+        betEl.textContent = `ALL-IN $${betAmount}`;
+        betEl.classList.add("current-bet--all-in");
+        seat.classList.add("player-seat--all-in");
+    } else {
+        betEl.textContent = `Bet: $${betAmount}`;
+        seat.classList.remove("player-seat--all-in");
+    }
+
+    // Add brief highlight animation on update
+    betEl.classList.remove("bet-updated");
+    void betEl.offsetWidth; // Force reflow
+    betEl.classList.add("bet-updated");
+}
+
+/**
+ * Clear all player bet displays (for new round)
+ */
+export function clearAllBets(): void {
+    document.querySelectorAll(".current-bet").forEach((el) => {
+        // Keep folded status, just clear bet amount
+        if (!el.classList.contains("current-bet--folded")) {
+            el.remove();
+        }
+    });
+}
+
 
 /**
  * Highlight whose turn it is
@@ -284,18 +428,22 @@ export function updatePlayerSeats(players: Player[]): void {
  * @param currentTurnUserId - User ID of whose turn it is
  */
 export function updateTurnIndicator(isMyTurn: boolean, currentTurnUserId: number | null): void {
-    // Clear all turn indicators
-    document.querySelectorAll(".active-turn").forEach((el) => el.classList.remove("active-turn"));
+    // Clear existing turn highlights
+    document.querySelectorAll(".active-turn").forEach((el) => {
+        el.classList.remove("active-turn", "turn-fade-out");
+    });
 
     if (isMyTurn) {
         const playerArea = document.querySelector(".player-area");
-        // Explicit null check
         if (playerArea !== null) {
             playerArea.classList.add("active-turn");
         }
+        const playerControls = document.querySelector(".player-controls");
+        if (playerControls !== null) {
+            playerControls.classList.add("active-turn");
+        }
     } else if (currentTurnUserId !== null) {
         const seat = document.querySelector(`.player-seat[data-user-id="${currentTurnUserId}"]`);
-        // Explicit null check
         if (seat !== null) {
             seat.classList.add("active-turn");
         }
@@ -311,6 +459,14 @@ export function updateTurnIndicator(isMyTurn: boolean, currentTurnUserId: number
         }
     }
 }
+
+/**
+ * Alias for updateTurnIndicator for task D2 naming consistency
+ * @param isMyTurn - Whether it's the current user's turn
+ * @param currentTurnUserId - User ID of whose turn it is
+ */
+export const setActiveTurn = updateTurnIndicator;
+
 
 /**
  * Update the current hand stage display
