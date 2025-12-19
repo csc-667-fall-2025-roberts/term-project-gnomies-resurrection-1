@@ -25,6 +25,7 @@ import {
     RIVER_REVEALED,
     TURN_REVEALED,
     GAME_STATE,
+    TURN_CHANGED,
 } from "../../shared/keys";
 import * as BettingService from "../services/betting-service";
 import * as RoundService from "../services/round-service";
@@ -82,7 +83,7 @@ async function checkAndAdvanceRound(io: Server | undefined, gameId: number): Pro
 
     const game = await Games.get(gameId);
     const roomName = `game-${gameId}`;
-    let dealResult;
+    let dealResult, nextTurnUserId;
 
     switch (game.state) {
         case "pre-flop":
@@ -90,6 +91,19 @@ async function checkAndAdvanceRound(io: Server | undefined, gameId: number): Pro
             io.to(roomName).emit(FLOP_REVEALED, dealResult);
             logger.info(`Game ${gameId}: Dealt flop`);
             await broadcastFullState(io, gameId);
+
+            // fetch current turn
+            nextTurnUserId = await Games.getCurrentTurn(gameId);
+
+            // log above action
+            logger.info(
+                `[TURN_CHANGED][ROUND_TRANSITION] game=${gameId} nextTurnUserId=${nextTurnUserId}`
+              );
+
+            // emit turn change
+            io.to(roomName).emit(TURN_CHANGED, {
+                current_turn_user_id: nextTurnUserId,
+              });
             break;
 
         case "flop":
@@ -97,6 +111,18 @@ async function checkAndAdvanceRound(io: Server | undefined, gameId: number): Pro
             io.to(roomName).emit(TURN_REVEALED, dealResult);
             logger.info(`Game ${gameId}: Dealt turn`);
             await broadcastFullState(io, gameId);
+            // fetch current turn
+            nextTurnUserId = await Games.getCurrentTurn(gameId);
+
+            // log above action
+            logger.info(
+                `[TURN_CHANGED][ROUND_TRANSITION] game=${gameId} nextTurnUserId=${nextTurnUserId}`
+              );
+
+            // emit turn change
+            io.to(roomName).emit(TURN_CHANGED, {
+                current_turn_user_id: nextTurnUserId,
+              });
             break;
 
         case "turn":
@@ -104,6 +130,18 @@ async function checkAndAdvanceRound(io: Server | undefined, gameId: number): Pro
             io.to(roomName).emit(RIVER_REVEALED, dealResult);
             logger.info(`Game ${gameId}: Dealt river`);
             await broadcastFullState(io, gameId);
+            // fetch current turn
+            nextTurnUserId = await Games.getCurrentTurn(gameId);
+
+            // log above action
+            logger.info(
+                `[TURN_CHANGED][ROUND_TRANSITION] game=${gameId} nextTurnUserId=${nextTurnUserId}`
+              );
+
+            // emit turn change
+            io.to(roomName).emit(TURN_CHANGED, {
+                current_turn_user_id: nextTurnUserId,
+              });
             break;
 
         case "river":
@@ -112,6 +150,18 @@ async function checkAndAdvanceRound(io: Server | undefined, gameId: number): Pro
                 io.to(roomName).emit(HAND_COMPLETE, { reason: "showdown", ...showdown });
                 logger.info(`Game ${gameId}: Hand complete, showdown`);
                 await broadcastFullState(io, gameId);
+            // fetch current turn
+            nextTurnUserId = await Games.getCurrentTurn(gameId);
+
+            // log above action
+            logger.info(
+                `[TURN_CHANGED][ROUND_TRANSITION] game=${gameId} nextTurnUserId=${nextTurnUserId}`
+              );
+
+            // emit turn change
+            io.to(roomName).emit(TURN_CHANGED, {
+                current_turn_user_id: nextTurnUserId,
+              });
             }
             break;
     }
