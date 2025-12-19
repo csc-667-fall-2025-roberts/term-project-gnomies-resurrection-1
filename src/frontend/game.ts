@@ -381,13 +381,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
 socket.on("connect", () => {
     socket.emit("game:requestState", { gameId });
-  });
-  
-  socket.on("game:state", (state) => {
+});
+
+socket.on("game:state", (state) => {
     console.log("GAME STATE (client):", state);
-  
+
     if (state.my_cards) {
-      updatePlayerHand(state.my_cards);
+        updatePlayerHand(state.my_cards);
     }
-  });
-  
+});

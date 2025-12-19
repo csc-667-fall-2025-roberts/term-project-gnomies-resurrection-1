@@ -33,6 +33,14 @@ export function updatePot(amount: number): void {
 
 /**
  * Update community cards display (flop, turn, river)
+ * 
+ * Preserves existing cards and only animates newly dealt cards.
+ * Edge cases handled:
+ * - New hand: fewer cards than before → clear and rebuild
+ * - Turn/River: adds 1 card → only new card animates
+ * - Reconnect: full state sync → rebuild all (animation OK for reconnect)
+ * - Duplicate event: same card count → no changes
+ * 
  * @param cards - Array of community cards to display
  */
 export function updateCommunityCards(cards: Card[]): void {
@@ -41,22 +49,65 @@ export function updateCommunityCards(cards: Card[]): void {
         return;
     }
 
-    // If no cards, clear the container
+    // If no cards, clear the container (new hand or game reset)
     if (!cards || cards.length === 0) {
         communityCardsContainer.innerHTML = "";
         return;
     }
 
-    // Clear and rebuild
-    communityCardsContainer.innerHTML = "";
-    cards.forEach((card) => {
+    // Count existing cards in the DOM
+    const existingCards = communityCardsContainer.querySelectorAll<HTMLElement>(".playing-card");
+    const existingCount = existingCards.length;
+    const newCount = cards.length;
+
+    // Edge case: Fewer cards than before means new hand started - clear and rebuild
+    if (newCount < existingCount) {
+        communityCardsContainer.innerHTML = "";
+        // Fall through to add all cards as new
+    }
+
+    // Edge case: Same count - likely duplicate event, verify cards match
+    if (newCount === existingCount && existingCount > 0) {
+        // Check if first and last cards match (quick validation)
+        const firstExisting = existingCards[0];
+        const lastExisting = existingCards[existingCount - 1];
+        const firstNew = cards[0];
+        const lastNew = cards[newCount - 1];
+
+        if (firstExisting.dataset.rank === firstNew.rank &&
+            firstExisting.dataset.suit === firstNew.suit &&
+            lastExisting.dataset.rank === lastNew.rank &&
+            lastExisting.dataset.suit === lastNew.suit) {
+            // Cards already match - no update needed
+            return;
+        }
+    }
+
+    // Get current count after potential clear
+    const currentCount = communityCardsContainer.querySelectorAll(".playing-card").length;
+
+    // Only add NEW cards (from currentCount to cards.length)
+    for (let i = currentCount; i < newCount; i++) {
+        const card = cards[i];
         const cardEl = document.createElement("div");
+
+        // Base card classes
         cardEl.className = `playing-card suit-${card.suit} rank-${card.rank}`;
+
+        // Data attributes for state tracking and debugging
         cardEl.dataset.rank = card.rank;
         cardEl.dataset.suit = card.suit;
+
+        // Visible card face: rank + suit symbol
         cardEl.textContent = `${card.rank}${getSuitSymbol(card.suit)}`;
+
+        // Staggered animation delay for newly dealt cards only
+        // CSS has nth-child delays, but we add explicit delay for newly appended cards
+        const animationDelay = (i - currentCount) * 0.15;
+        cardEl.style.animationDelay = `${animationDelay}s`;
+
         communityCardsContainer.appendChild(cardEl);
-    });
+    }
 }
 
 /**
@@ -77,38 +128,38 @@ function getSuitSymbol(suit: string): string {
 export function updatePlayerHand(cards: { rank: string; suit: string }[]): void {
     // Graceful handling: missing container or invalid data
     if (!playerHandContainer || !Array.isArray(cards) || cards.length === 0) {
-      return;
+        return;
     }
-  
+
     // Clear existing cards (idempotent update)
     playerHandContainer.innerHTML = "";
-  
+
     cards.forEach((card) => {
-      // Validate card shape defensively
-      if (!card.rank || !card.suit) {
-        return;
-      }
-  
-      const cardEl = document.createElement("div");
-  
-      // Base card classes
-      cardEl.classList.add("playing-card", "playing-card--hole");
-  
-      // Semantic CSS hooks
-      cardEl.classList.add(`rank-${card.rank}`);
-      cardEl.classList.add(`suit-${card.suit}`);
-  
-      // Data attributes for debugging / testing
-      cardEl.dataset.rank = card.rank;
-      cardEl.dataset.suit = card.suit;
-  
-      // Visible face value
-      cardEl.textContent = `${card.rank}${getSuitSymbol(card.suit)}`;
-  
-      playerHandContainer.appendChild(cardEl);
+        // Validate card shape defensively
+        if (!card.rank || !card.suit) {
+            return;
+        }
+
+        const cardEl = document.createElement("div");
+
+        // Base card classes
+        cardEl.classList.add("playing-card", "playing-card--hole");
+
+        // Semantic CSS hooks
+        cardEl.classList.add(`rank-${card.rank}`);
+        cardEl.classList.add(`suit-${card.suit}`);
+
+        // Data attributes for debugging / testing
+        cardEl.dataset.rank = card.rank;
+        cardEl.dataset.suit = card.suit;
+
+        // Visible face value
+        cardEl.textContent = `${card.rank}${getSuitSymbol(card.suit)}`;
+
+        playerHandContainer.appendChild(cardEl);
     });
-  }
-  
+}
+
 
 /**
  * Update player seats display

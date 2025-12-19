@@ -14,3 +14,8 @@ export const PLAYER_LEFT = "player-left";
 
 // Game state events
 export const GAME_STARTED = "game:started";
+
+// Round progression events (community cards)
+export const FLOP_REVEALED = "flop:revealed";
+export const TURN_REVEALED = "turn:revealed";
+export const RIVER_REVEALED = "river:revealed";
