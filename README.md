@@ -1,3 +1,15 @@
+This is poker implemented in node, express, and postgres developed by John Tsiglieris, Bao Than, Kien Ngo and Salvador Godinez for CSC 667 Fall 2025.
+
+# Usage
+
+- Create .env file (follow .env example) and link to your database
+- Install node dependancies
+- Do npm run migrate:up
+- Do npm run dev
+
+
+---
+
 # TODO
 
 ## General
